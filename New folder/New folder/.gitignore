@@ -1,0 +1,19 @@
+# Datasets
+Apple/
+cotton/
+yolo_training/
+
+# Model Checkpoints
+*.pth
+
+# Python caching & environments
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.env
+
+# OS specific files
+.DS_Store
+Thumbs.db

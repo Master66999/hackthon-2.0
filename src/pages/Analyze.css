@@ -1,0 +1,301 @@
+/* ══════════════════════════════════════════
+   Analyze Page Styles
+══════════════════════════════════════════ */
+
+.analyze {
+  padding-top: 100px;
+  padding-bottom: var(--sp-20);
+  min-height: 100svh;
+  position: relative;
+}
+
+.analyze__inner {
+  max-width: 960px;
+}
+
+/* ─── Header ────────────────────────── */
+.analyze__header {
+  margin-bottom: 2.5rem;
+}
+
+.analyze__title {
+  font-size: clamp(1.8rem, 3vw + 0.5rem, 2.8rem);
+  margin-bottom: 0.6rem;
+}
+
+.analyze__subtitle {
+  color: var(--text-secondary);
+  max-width: 520px;
+}
+
+/* ─── Crop Grid ─────────────────────── */
+.crop-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+/* ─── Upload Section ────────────────── */
+.analyze__step-divider {
+  margin-bottom: 2rem;
+}
+
+.analyze__step-label {
+  margin-top: 2rem;
+}
+
+.analyze__upload-title {
+  font-size: clamp(1.5rem, 2.5vw + 0.3rem, 2.2rem);
+  margin-bottom: 0.5rem;
+}
+
+.analyze__upload-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* ─── Upload Zone ───────────────────── */
+.upload-zone {
+  position: relative;
+  border-radius: var(--radius-xl);
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  border: 2px dashed transparent;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.upload-zone--dragover {
+  border-color: var(--moss);
+  background: rgba(61, 107, 79, 0.05);
+}
+
+.upload-zone--has-preview {
+  cursor: default;
+}
+
+.upload-zone__input {
+  display: none;
+}
+
+.upload-zone__prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 3rem;
+  text-align: center;
+}
+
+.upload-zone__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--neo-inset);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.upload-zone__icon--active {
+  color: var(--moss);
+  transform: translateY(-4px) scale(1.05);
+}
+
+.upload-zone__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.upload-zone__hint {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.upload-zone__hint-link {
+  color: var(--moss);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.upload-zone__formats {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ─── Preview ───────────────────────── */
+.upload-preview {
+  position: relative;
+  width: 100%;
+  height: 320px;
+}
+
+.upload-preview__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-xl);
+}
+
+.upload-preview__remove {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(245, 240, 232, 0.9);
+  backdrop-filter: blur(8px);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--neo-raised-sm);
+  transition: transform 0.15s ease;
+}
+
+.upload-preview__remove:hover { transform: scale(1.1); }
+
+.upload-preview__overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.75rem 1rem;
+  background: rgba(245, 240, 232, 0.88);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+/* ─── Tips ──────────────────────────── */
+.upload-tips {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upload-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ─── Submit Row ────────────────────── */
+.analyze__submit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.analyze__submit-btn {
+  padding: 1rem 2.5rem;
+  font-size: 1.05rem;
+  min-width: 200px;
+  justify-content: center;
+}
+
+.analyze__submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ─── Loading Overlay ───────────────── */
+.analyze__loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(245, 240, 232, 0.75);
+  backdrop-filter: blur(12px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.analyze__loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 3rem 3.5rem;
+  text-align: center;
+  max-width: 380px;
+}
+
+.analyze__loading-sub {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+/* ─── Responsive ────────────────────── */
+@media (max-width: 900px) {
+  .crop-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .crop-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .analyze__submit-row { justify-content: center; }
+  .analyze__submit-btn { width: 100%; }
+}
+
+/* ─── Camera Scanner ────────────────── */
+.upload-zone--camera-active {
+  cursor: default;
+  height: 380px;
+}
+
+.camera-scanner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.camera-scanner__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+.upload-zone__camera-trigger-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.upload-zone__camera-btn {
+  transition: all 0.2s ease;
+}
+
+.upload-zone__camera-btn:hover {
+  transform: translateY(-2px);
+}

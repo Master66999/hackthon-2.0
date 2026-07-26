@@ -1,0 +1,18 @@
+# Ignore datasets
+Apple/
+cotton/
+yolo_training/
+
+# Ignore large checkpoints
+*.pth
+
+# Ignore git and local environments
+.git
+.gitignore
+.dockerignore
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.env

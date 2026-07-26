@@ -1,0 +1,58 @@
+.confidence-bar {
+  width: 100%;
+}
+
+.confidence-bar__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.confidence-bar__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.confidence-bar__value {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.confidence-bar__track {
+  height: 10px;
+  background: var(--surface);
+  border-radius: var(--radius-full);
+  box-shadow: var(--neo-inset);
+  overflow: hidden;
+}
+
+.confidence-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: none; /* We drive width via JS animation */
+}
+
+/* Color variants */
+.confidence-bar--high .confidence-bar__value { color: var(--moss); }
+.confidence-bar--high .confidence-bar__fill {
+  background: linear-gradient(90deg, var(--moss) 0%, var(--moss-light) 100%);
+  box-shadow: 0 0 10px rgba(61, 107, 79, 0.4);
+}
+
+.confidence-bar--medium .confidence-bar__value { color: var(--warning); }
+.confidence-bar--medium .confidence-bar__fill {
+  background: linear-gradient(90deg, #A86030 0%, var(--clay) 100%);
+  box-shadow: 0 0 10px rgba(196, 123, 90, 0.4);
+}
+
+.confidence-bar--low .confidence-bar__value { color: var(--danger); }
+.confidence-bar--low .confidence-bar__fill {
+  background: linear-gradient(90deg, var(--danger) 0%, #D46060 100%);
+  box-shadow: 0 0 10px rgba(184, 64, 64, 0.4);
+}

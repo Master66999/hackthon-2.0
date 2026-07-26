@@ -1,0 +1,702 @@
+/* ══════════════════════════════════════════
+   Plant AI Vision & Soil Intelligence Console
+   LeafSense Aesthetic (Cream, Moss Green, Terracotta, Neomorphism)
+══════════════════════════════════════════ */
+
+.vision-console {
+  padding-top: 100px;
+  padding-bottom: var(--sp-20);
+  min-height: 100svh;
+}
+
+/* Header */
+.vc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.vc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--moss);
+  margin-bottom: 0.4rem;
+}
+
+.vc-eyebrow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--clay);
+}
+
+.vc-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.vc-title em {
+  color: var(--moss);
+  font-style: italic;
+}
+
+.vc-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.vc-lang-select {
+  display: flex;
+  background: var(--surface-raised);
+  padding: 0.25rem;
+  border-radius: var(--radius-full);
+}
+
+.vc-lang-btn {
+  border: none;
+  background: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vc-lang-btn.active {
+  background: var(--moss);
+  color: #fff;
+}
+
+.vc-key-btn {
+  font-size: 0.85rem;
+}
+
+/* Tabs */
+.vc-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.vc-tab {
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--surface);
+  box-shadow: var(--neo-raised-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.vc-tab:hover {
+  color: var(--moss);
+}
+
+.vc-tab--active {
+  background: var(--moss);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(61, 107, 79, 0.3);
+}
+
+/* Grid Layout */
+.vc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.vc-grid--equal {
+  grid-template-columns: 1fr 1fr;
+}
+
+.vc-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Cards */
+.vc-card {
+  padding: 1.75rem;
+  border-radius: var(--radius-xl);
+  background: var(--surface-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.vc-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vc-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.vc-card__subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: -0.75rem;
+}
+
+.vc-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  background: var(--success-pale);
+  color: var(--moss);
+  border-radius: var(--radius-full);
+}
+
+.vc-icon-moss { color: var(--moss); }
+.vc-icon-terracotta { color: var(--clay); }
+
+/* Controls Row */
+.vc-controls-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.vc-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.vc-select-wrap label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.vc-select, .vc-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--neo-inset);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.vc-input-btn-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Media Stage */
+.vc-media-stage {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #000;
+  position: relative;
+}
+
+.vc-image-viewport, .vc-camera-viewport {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.vc-image, .vc-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vc-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(245, 240, 232, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--moss);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.vc-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--moss-pale);
+  border-top-color: var(--moss);
+  border-radius: 50%;
+  animation: vc-spin 0.8s linear infinite;
+}
+
+@keyframes vc-spin {
+  to { transform: rotate(360deg); }
+}
+
+.vc-camera-overlay {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* Upload bar */
+.vc-upload-bar {
+  display: flex;
+  gap: 1rem;
+}
+
+.vc-upload-btn {
+  flex: 1;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Quote Card */
+.vc-quote-card {
+  background: linear-gradient(135deg, rgba(61, 107, 79, 0.08) 0%, rgba(196, 123, 90, 0.08) 100%);
+  border: 1px solid rgba(61, 107, 79, 0.15);
+}
+
+.vc-quote-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.vc-quote-header h4 {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.vc-audio-btn {
+  border: none;
+  background: var(--surface);
+  box-shadow: var(--neo-raised-sm);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--moss);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vc-quote-text {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.vc-quote-model {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Diagnosis Header Card */
+.vc-diag-header-card {
+  background: var(--moss);
+  color: #fff;
+}
+
+.vc-diag-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--moss-pale);
+}
+
+.vc-diag-title {
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  color: #fff;
+  margin-top: 0.2rem;
+  margin-bottom: 1rem;
+}
+
+.vc-diag-metrics {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.vc-metric-pill {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.vc-metric-label {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+}
+
+.vc-metric-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.vc-metric-val--green {
+  color: var(--clay-pale);
+}
+
+/* Climate Vitals Grid */
+.vc-vitals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.vc-vital-box {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--surface);
+  box-shadow: var(--neo-raised-sm);
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+}
+
+.vc-vital-icon {
+  color: var(--moss);
+}
+
+.vc-vital-title {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.vc-vital-value {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.vc-soil-summary {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background: var(--surface);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+}
+
+/* Radar SVG */
+.vc-radar-container {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.vc-radar-svg {
+  width: 100%;
+  height: auto;
+}
+
+.vc-radar-text {
+  font-size: 8px;
+  fill: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Comparison Grid (Tab 2) */
+.vc-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.vc-comp-box h4 {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.vc-comp-box img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  box-shadow: var(--neo-raised-sm);
+}
+
+/* Gauges */
+.vc-gauges-row {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1rem;
+}
+
+.vc-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.vc-gauge-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.vc-gauge-inner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.vc-dosage-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-top: 1rem;
+}
+
+/* Chat Card */
+.vc-chat-card {
+  height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.vc-chat-logs {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+}
+
+.vc-chat-msg {
+  display: flex;
+}
+
+.vc-chat-msg--user {
+  justify-content: flex-end;
+}
+
+.vc-chat-bubble {
+  max-width: 80%;
+  padding: 0.65rem 0.95rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.vc-chat-msg--user .vc-chat-bubble {
+  background: var(--moss);
+  color: #fff;
+}
+
+.vc-chat-msg--ai .vc-chat-bubble {
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--neo-raised-sm);
+}
+
+.vc-chat-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* Soil detail list (Tab 3) */
+.vc-soil-detail-card {
+  background: var(--surface);
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+}
+
+.vc-soil-detail-card h4 {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.vc-soil-detail-card ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+/* Risk Breakdown Grid (Tab 4) */
+.vc-radar-breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.vc-risk-tile {
+  background: var(--surface);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.vc-risk-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.vc-risk-score {
+  font-size: 1.4rem;
+  font-family: var(--font-display);
+  color: var(--clay);
+}
+
+.vc-risk-bar {
+  height: 6px;
+  background: var(--surface-raised);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.vc-risk-bar div {
+  height: 100%;
+  background: var(--clay);
+  border-radius: var(--radius-full);
+}
+
+/* Reports & API (Tab 5) */
+.vc-download-report-btn {
+  padding: 1rem;
+  font-size: 0.95rem;
+  justify-content: center;
+}
+
+.vc-presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.vc-preset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.15rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  cursor: pointer;
+  text-align: left;
+}
+
+.vc-preset-btn strong {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.vc-preset-btn span {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Modal */
+.vc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.vc-modal {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg);
+  padding: 2rem;
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.vc-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .vc-grid, .vc-grid--equal, .vc-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,333 @@
+/* ====================================================
+   LeafSense — Global Design System
+   ==================================================== */
+
+/* --- Reset & Box Model --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- Design Tokens --- */
+:root {
+  /* Palette */
+  --bg: #F5F0E8;
+  --bg-deep: #EDE8DC;
+  --surface: #EAE4D6;
+  --surface-raised: #F0EBE0;
+
+  /* Neomorphic shadows (light source: top-left) */
+  --neo-shadow-light: rgba(255, 255, 255, 0.78);
+  --neo-shadow-dark: rgba(0, 0, 0, 0.13);
+  --neo-raised: 6px 6px 16px var(--neo-shadow-dark), -6px -6px 16px var(--neo-shadow-light);
+  --neo-raised-sm: 3px 3px 8px var(--neo-shadow-dark), -3px -3px 8px var(--neo-shadow-light);
+  --neo-raised-lg: 10px 10px 28px var(--neo-shadow-dark), -10px -10px 28px var(--neo-shadow-light);
+  --neo-inset: inset 4px 4px 10px var(--neo-shadow-dark), inset -4px -4px 10px var(--neo-shadow-light);
+  --neo-pressed: inset 3px 3px 8px var(--neo-shadow-dark), inset -2px -2px 6px var(--neo-shadow-light);
+
+  /* Brand colors */
+  --moss: #3D6B4F;
+  --moss-light: #5A8F6E;
+  --moss-pale: #A8C5B0;
+  --soil: #6B4C35;
+  --clay: #C47B5A;
+  --clay-light: #D99475;
+  --clay-pale: #EDD5C5;
+
+  /* Text */
+  --text-primary: #1E2A1F;
+  --text-secondary: #4A5C4D;
+  --text-muted: #7A7268;
+  --text-inverse: #F5F0E8;
+
+  /* Semantic */
+  --danger: #B84040;
+  --danger-pale: #F2D5D5;
+  --warning: #B87040;
+  --warning-pale: #F2E3D0;
+  --success: #3D6B4F;
+  --success-pale: #D0E6D8;
+
+  /* Typography */
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+
+  /* Spacing */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+  --sp-20: 5rem;
+  --sp-24: 6rem;
+
+  /* Border radius */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 100ms;
+  --dur-base: 200ms;
+  --dur-slow: 350ms;
+}
+
+/* --- Base Styles --- */
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* --- Typography Scale --- */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: clamp(2.4rem, 5vw + 1rem, 4.5rem);
+}
+
+h2 {
+  font-size: clamp(1.8rem, 3vw + 0.8rem, 3rem);
+}
+
+h3 {
+  font-size: clamp(1.2rem, 2vw + 0.5rem, 1.75rem);
+}
+
+h4 {
+  font-size: 1.1rem;
+}
+
+p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--moss);
+  text-decoration: none;
+  transition: color var(--dur-base) ease;
+}
+
+a:hover {
+  color: var(--moss-light);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* --- Neomorphic Utility Classes --- */
+.neo-raised {
+  background: var(--surface-raised);
+  box-shadow: var(--neo-raised);
+  border-radius: var(--radius-lg);
+}
+
+.neo-raised-sm {
+  background: var(--surface-raised);
+  box-shadow: var(--neo-raised-sm);
+  border-radius: var(--radius-md);
+}
+
+.neo-inset {
+  background: var(--surface);
+  box-shadow: var(--neo-inset);
+  border-radius: var(--radius-lg);
+}
+
+/* --- Button Base --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-6);
+  border: none;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--moss);
+  color: var(--text-inverse);
+  box-shadow: var(--neo-raised-sm);
+}
+
+.btn-primary:hover {
+  background: var(--moss-light);
+  color: var(--text-inverse);
+  transform: translateY(-1px);
+  box-shadow: var(--neo-raised);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: var(--neo-pressed);
+}
+
+.btn-secondary {
+  background: var(--surface-raised);
+  color: var(--moss);
+  box-shadow: var(--neo-raised-sm);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--neo-raised);
+}
+
+.btn-secondary:active {
+  transform: scale(0.97);
+  box-shadow: var(--neo-pressed);
+}
+
+.btn-clay {
+  background: var(--clay);
+  color: #fff;
+  box-shadow: var(--neo-raised-sm);
+}
+
+.btn-clay:hover {
+  background: var(--clay-light);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: var(--neo-raised);
+}
+
+.btn-clay:active {
+  transform: scale(0.97);
+  box-shadow: var(--neo-pressed);
+}
+
+/* --- Container --- */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--sp-6);
+}
+
+/* --- Scrollbar styling --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--moss-pale);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--moss);
+}
+
+/* --- Focus styles (accessibility) --- */
+:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* --- Section spacing --- */
+.section {
+  padding: var(--sp-20) 0;
+}
+
+/* --- Badge --- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.badge-danger {
+  background: var(--danger-pale);
+  color: var(--danger);
+}
+
+.badge-warning {
+  background: var(--warning-pale);
+  color: var(--warning);
+}
+
+.badge-success {
+  background: var(--success-pale);
+  color: var(--success);
+}
+
+/* --- Divider --- */
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--moss-pale), transparent);
+  margin: var(--sp-8) 0;
+}
+
+/* --- Grain texture overlay (subtle) --- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+/* --- Embla Carousel base --- */
+.embla {
+  overflow: hidden;
+}
+
+.embla__container {
+  display: flex;
+}
+
+.embla__slide {
+  flex: 0 0 auto;
+  min-width: 0;
+}

@@ -1,0 +1,169 @@
+"""
+Flask Web Application & API Entrypoint for LeafSense Plant AI Vision & Soil Intelligence Console.
+Runs on Port 5001 (proxied via Vite dev server at /api/vision).
+"""
+
+import os
+import io
+import json
+from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
+
+from vision_services.model_engine import get_model_engine
+from vision_services.weather_service import fetch_weather_and_soil
+from vision_services.fertilizer_service import calculate_fertilizer_npk
+from vision_services.organic_service import get_organic_remedies
+from vision_services.outbreak_radar import calculate_outbreak_risk
+from vision_services.ai_service import generate_llm_expert_analysis, answer_agronomic_chat_question
+from vision_services.pdf_generator import generate_diagnostic_pdf
+
+app = Flask(__name__)
+CORS(app)
+
+# Ensure reports directory exists
+REPORTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "reports"))
+os.makedirs(REPORTS_DIR, exist_ok=True)
+
+
+@app.route("/api/vision/health", methods=["GET"])
+def health_check():
+    return jsonify({
+        "status": "online",
+        "service": "LeafSense Plant AI Vision & Soil Intelligence Backend",
+        "port": 5001
+    })
+
+
+@app.route("/api/vision/analyze", methods=["POST"])
+def analyze_leaf_image():
+    """
+    Primary Diagnostic Endpoint.
+    Accepts form-data:
+      - image: image file (JPG/PNG)
+      - crop: 'Auto-Detect', 'Apple', 'Cotton', 'Hibiscus'
+      - location: 'Nagpur', 'Assam', Coords, etc.
+      - api_key: optional Gemini/OpenAI API key
+    """
+    try:
+        if 'image' not in request.files:
+            return jsonify({"error": "No image file provided in request."}), 400
+
+        img_file = request.files['image']
+        crop_override = request.form.get('crop', 'Auto-Detect')
+        location = request.form.get('location', 'Nagpur')
+        user_api_key = request.form.get('api_key') or request.headers.get('X-AI-API-Key')
+        
+        image_bytes = img_file.read()
+        if len(image_bytes) == 0:
+            return jsonify({"error": "Uploaded image file is empty."}), 400
+
+        # 1. Run Unified Model Engine (CLAHE + Crop Detection + Model Predictor)
+        engine = get_model_engine()
+        engine_res = engine.process_and_analyze(image_bytes, crop_override=crop_override)
+
+        # 2. Fetch Live Climate & Soil Profile
+        weather_res = fetch_weather_and_soil(location)
+        weather_info = weather_res["weather"]
+        soil_info = weather_res["soil"]
+
+        # 3. Calculate N-P-K & Fertilizer Recommendations
+        fertilizer_info = calculate_fertilizer_npk(
+            engine_res["crop"],
+            engine_res["disease"],
+            spot_ratio=engine_res.get("spot_ratio", 0.0)
+        )
+
+        # 4. Get Organic Remedies
+        organic_info = get_organic_remedies(engine_res["disease"])
+
+        # 5. Outbreak Risk Radar Scores
+        radar_info = calculate_outbreak_risk(
+            engine_res["disease"],
+            humidity=weather_info.get("humidity", 68),
+            temp=weather_info.get("temperature", 28.5)
+        )
+
+        # 6. LLM Multimodal Vision Analysis / Self-Correction
+        ai_expert_res = generate_llm_expert_analysis(
+            engine_res["annotated_b64"],
+            engine_res["crop"],
+            engine_res["disease"],
+            engine_res["confidence"],
+            weather_info,
+            user_api_key=user_api_key
+        )
+
+        # Combine payload
+        final_payload = {
+            "crop": ai_expert_res.get("verified_crop", engine_res["crop"]),
+            "disease": ai_expert_res.get("verified_disease", engine_res["disease"]),
+            "confidence": engine_res["confidence"],
+            "contour_stats": engine_res["contour_stats"],
+            "spot_count": engine_res.get("spot_count", 0),
+            "spot_ratio": engine_res.get("spot_ratio", 0.0),
+            "original_b64": engine_res["original_b64"],
+            "clahe_b64": engine_res["clahe_b64"],
+            "annotated_b64": engine_res["annotated_b64"],
+            "expert_quote": ai_expert_res.get("expert_quote"),
+            "organic_controls": ai_expert_res.get("organic_controls"),
+            "chemical_controls": ai_expert_res.get("chemical_controls"),
+            "llm_used": ai_expert_res.get("llm_used"),
+            "weather": weather_info,
+            "soil": soil_info,
+            "fertilizer": fertilizer_info,
+            "organic": organic_info,
+            "radar": radar_info
+        }
+
+        return jsonify(final_payload)
+    except Exception as e:
+        print(f"Error in /api/vision/analyze: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/vision/chat", methods=["POST"])
+def agronomic_chat():
+    """Q&A Chatbot assistant endpoint."""
+    try:
+        data = request.get_json() or {}
+        user_question = data.get("question", "")
+        context_data = data.get("context", {})
+        user_api_key = data.get("api_key") or request.headers.get("X-AI-API-Key")
+
+        if not user_question:
+            return jsonify({"answer": "Please ask a question regarding your crop pathology or soil requirements."})
+
+        answer = answer_agronomic_chat_question(user_question, context_data, user_api_key=user_api_key)
+        return jsonify({"answer": answer})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/vision/weather", methods=["GET"])
+def get_weather():
+    """Live climate endpoint."""
+    location = request.args.get("location", "Nagpur")
+    data = fetch_weather_and_soil(location)
+    return jsonify(data)
+
+
+@app.route("/api/vision/pdf", methods=["POST"])
+def generate_pdf_report():
+    """Generates downloadable A4 PDF diagnostic report."""
+    try:
+        data = request.get_json() or {}
+        diag = data.get("diag", {})
+        weather = data.get("weather", {})
+        fertilizer = data.get("fertilizer", {})
+        organic = data.get("organic", {})
+
+        pdf_path = generate_diagnostic_pdf(diag, weather, fertilizer, organic)
+        return send_file(pdf_path, as_attachment=True, download_name=f"LeafSense_Pathology_Report.pdf")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5001))
+    print(f"\n[LeafSense] Plant AI Vision & Soil Intelligence Console running on http://localhost:{port}")
+    app.run(host="0.0.0.0", port=port, debug=True)

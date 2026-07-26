@@ -1,0 +1,22 @@
+{
+  "name": "leafsense",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "embla-carousel-auto-scroll": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^12.42.2",
+    "react-router-dom": "^7.18.1"
+  }
+}

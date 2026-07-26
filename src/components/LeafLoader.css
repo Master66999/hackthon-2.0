@@ -1,0 +1,93 @@
+.leaf-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.leaf-loader__orbit {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaf-loader__leaf {
+  animation: leaf-breathe 2s ease-in-out infinite;
+  transform-origin: center bottom;
+  filter: drop-shadow(0 8px 20px rgba(61, 107, 79, 0.35));
+}
+
+@keyframes leaf-breathe {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.9;
+  }
+  30% {
+    transform: scale(1.08) rotate(-3deg);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.04) rotate(2deg);
+    opacity: 0.95;
+  }
+}
+
+/* Orbiting dots */
+.leaf-loader__dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--clay);
+}
+
+.leaf-loader__dot--1 {
+  animation: orbit 2.4s linear infinite;
+  top: 0;
+  left: 50%;
+  transform-origin: 0 60px;
+}
+
+.leaf-loader__dot--2 {
+  animation: orbit 2.4s linear infinite;
+  animation-delay: -0.8s;
+  top: 0;
+  left: 50%;
+  transform-origin: 0 60px;
+  background: var(--moss-light);
+}
+
+.leaf-loader__dot--3 {
+  animation: orbit 2.4s linear infinite;
+  animation-delay: -1.6s;
+  top: 0;
+  left: 50%;
+  transform-origin: 0 60px;
+  background: var(--soil);
+  opacity: 0.6;
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg) translateX(-4px);
+  }
+  to {
+    transform: rotate(360deg) translateX(-4px);
+  }
+}
+
+.leaf-loader__label {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+  animation: pulse-text 2s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
