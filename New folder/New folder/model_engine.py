@@ -261,8 +261,23 @@ class PlantDiseaseClassifier:
         # Circularity score (lobed/palmate Cotton leaves have low circularity)
         circularity = (4 * np.pi * area) / (perimeter ** 2) if perimeter > 0 else 0.0
         
-        # Cotton: Highly lobed leaf shape leads to low solidity and circularity
-        if solidity < 0.77 or circularity < 0.48:
+        # Calculate convexity defects to detect deep lobes (unique to Cotton leaves)
+        defect_count = 0
+        try:
+            hull_indices = cv2.convexHull(main_contour, returnPoints=False)
+            if len(hull_indices) > 3:
+                defects = cv2.convexityDefects(main_contour, hull_indices)
+                if defects is not None:
+                    for i in range(defects.shape[0]):
+                        s, e, f, d = defects[i, 0]
+                        depth = d / 256.0
+                        if depth > 10.0:  # defect depth threshold in pixels
+                            defect_count += 1
+        except Exception as e:
+            print(f"[ModelEngine] Convexity defect notice: {e}")
+
+        # Cotton: Highly lobed leaves have lower solidity (<0.83), circularity (<0.54), or deep convexity defects (defects >= 2)
+        if solidity < 0.83 or circularity < 0.54 or defect_count >= 2:
             return "Cotton"
         else:
             # Apple vs Hibiscus: Compare average green pixel brightness (V in HSV)
@@ -273,7 +288,7 @@ class PlantDiseaseClassifier:
             else:
                 return "Hibiscus"
 
-    def _predict_apple(self, clahe_bgr, img_name_lower):
+    def _predict_apple(self, clahe_bgr):
         """OpenCV feature extraction & heuristic rules for Apple diseases."""
         hsv = cv2.cvtColor(clahe_bgr, cv2.COLOR_BGR2HSV)
         h, w, _ = clahe_bgr.shape
@@ -323,31 +338,21 @@ class PlantDiseaseClassifier:
                 cv2.rectangle(annotated_bgr, (x_c, y_c), (x_c + w_c, y_c + h_c), (217, 119, 6), 2)
                 drawn_boxes += 1
         
-        # Ground truth override checks for tests/validation dataset names
-        if "scab" in img_name_lower:
-            pred_name = "Apple Scab"
-        elif "rot" in img_name_lower or "black" in img_name_lower:
-            pred_name = "Apple Black Rot"
-        elif "rust" in img_name_lower:
-            pred_name = "Cedar Apple Rust"
-        elif "healthy" in img_name_lower:
+        # Automated visual heuristic classification based on calibrated thresholds
+        if spot_ratio < 1.0 and drawn_boxes <= 3:
             pred_name = "Apple Healthy"
         else:
-            # Automated visual heuristic classification based on calibrated thresholds
-            if spot_ratio < 1.0 and drawn_boxes <= 3:
-                pred_name = "Apple Healthy"
+            avg_hue = np.mean(hues) if hues else 10
+            avg_val = np.mean(values) if values else 100
+            
+            # Very dark brown or necrotic lesions imply Black Rot
+            if avg_val < 95:
+                pred_name = "Apple Black Rot"
+            # Orange/Yellowish-Red spots imply Rust
+            elif 5 <= avg_hue <= 25 and avg_val > 105:
+                pred_name = "Cedar Apple Rust"
             else:
-                avg_hue = np.mean(hues) if hues else 10
-                avg_val = np.mean(values) if values else 100
-                
-                # Very dark brown or necrotic lesions imply Black Rot
-                if avg_val < 95:
-                    pred_name = "Apple Black Rot"
-                # Orange/Yellowish-Red spots imply Rust
-                elif 5 <= avg_hue <= 25 and avg_val > 105:
-                    pred_name = "Cedar Apple Rust"
-                else:
-                    pred_name = "Apple Scab"
+                pred_name = "Apple Scab"
         
         # If healthy, discard raw spot overlay drawings to show clean leaf
         if pred_name == "Apple Healthy":
@@ -518,17 +523,7 @@ class PlantDiseaseClassifier:
         else:
             clahe_bgr = img_bgr.copy()
 
-        img_name_lower = os.path.basename(image_path).lower()
-
-        # 1. Determine/override crop type based on filename keywords if present
-        if "apple" in img_name_lower or "scab" in img_name_lower or "rust" in img_name_lower or "rot" in img_name_lower:
-            crop_type = "Apple"
-        elif "cotton" in img_name_lower or "blight" in img_name_lower or "curl" in img_name_lower or "wilt" in img_name_lower:
-            crop_type = "Cotton"
-        elif "hibiscus" in img_name_lower or "citruspot" in img_name_lower or "senescent" in img_name_lower or "wrinkled" in img_name_lower:
-            crop_type = "Hibiscus"
-
-        # 2. Run visual contour shape and color heuristic if Auto-Detect is specified
+        # 1. Run visual contour shape and color heuristic if Auto-Detect is specified
         if not crop_type or crop_type == "Auto-Detect":
             hsv = cv2.cvtColor(clahe_bgr, cv2.COLOR_BGR2HSV)
             
@@ -549,9 +544,9 @@ class PlantDiseaseClassifier:
             
             crop_type = self._auto_detect_crop(hsv, leaf_mask)
 
-        # 3. Route to the appropriate sub-model prediction method
+        # 2. Route to the appropriate sub-model prediction method
         if crop_type == "Apple":
-            result = self._predict_apple(clahe_bgr, img_name_lower)
+            result = self._predict_apple(clahe_bgr)
         elif crop_type == "Cotton":
             result = self._predict_cotton(clahe_bgr, image_path)
         else:

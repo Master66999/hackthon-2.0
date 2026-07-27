@@ -262,8 +262,23 @@ class PlantDiseaseClassifier:
         # Circularity score (lobed/palmate Cotton leaves have low circularity)
         circularity = (4 * np.pi * area) / (perimeter ** 2) if perimeter > 0 else 0.0
         
-        # Cotton: Highly lobed leaf shape leads to low solidity and circularity
-        if solidity < 0.77 or circularity < 0.48:
+        # Calculate convexity defects to detect deep lobes (unique to Cotton leaves)
+        defect_count = 0
+        try:
+            hull_indices = cv2.convexHull(main_contour, returnPoints=False)
+            if len(hull_indices) > 3:
+                defects = cv2.convexityDefects(main_contour, hull_indices)
+                if defects is not None:
+                    for i in range(defects.shape[0]):
+                        s, e, f, d = defects[i, 0]
+                        depth = d / 256.0
+                        if depth > 10.0:  # defect depth threshold in pixels
+                            defect_count += 1
+        except Exception as e:
+            print(f"[ModelEngine] Convexity defect notice: {e}")
+
+        # Cotton: Highly lobed leaves have lower solidity (<0.83), circularity (<0.54), or deep convexity defects (defects >= 2)
+        if solidity < 0.83 or circularity < 0.54 or defect_count >= 2:
             return "Cotton"
         else:
             # Apple vs Hibiscus: Compare average green pixel brightness (V in HSV)
@@ -274,7 +289,7 @@ class PlantDiseaseClassifier:
             else:
                 return "Hibiscus"
 
-    def _predict_apple(self, clahe_bgr, img_name_lower):
+    def _predict_apple(self, clahe_bgr):
         """OpenCV feature extraction & heuristic rules for Apple diseases."""
         hsv = cv2.cvtColor(clahe_bgr, cv2.COLOR_BGR2HSV)
         h, w, _ = clahe_bgr.shape
@@ -324,31 +339,21 @@ class PlantDiseaseClassifier:
                 cv2.rectangle(annotated_bgr, (x_c, y_c), (x_c + w_c, y_c + h_c), (217, 119, 6), 2)
                 drawn_boxes += 1
         
-        # Ground truth override checks for tests/validation dataset names
-        if "scab" in img_name_lower:
-            pred_name = "Apple Scab"
-        elif "rot" in img_name_lower or "black" in img_name_lower:
-            pred_name = "Apple Black Rot"
-        elif "rust" in img_name_lower:
-            pred_name = "Cedar Apple Rust"
-        elif "healthy" in img_name_lower:
+        # Automated visual heuristic classification based on calibrated thresholds
+        if spot_ratio < 1.0 and drawn_boxes <= 3:
             pred_name = "Apple Healthy"
         else:
-            # Automated visual heuristic classification based on calibrated thresholds
-            if spot_ratio < 1.0 and drawn_boxes <= 3:
-                pred_name = "Apple Healthy"
+            avg_hue = np.mean(hues) if hues else 10
+            avg_val = np.mean(values) if values else 100
+            
+            # Very dark brown or necrotic lesions imply Black Rot
+            if avg_val < 95:
+                pred_name = "Apple Black Rot"
+            # Orange/Yellowish-Red spots imply Rust
+            elif 5 <= avg_hue <= 25 and avg_val > 105:
+                pred_name = "Cedar Apple Rust"
             else:
-                avg_hue = np.mean(hues) if hues else 10
-                avg_val = np.mean(values) if values else 100
-                
-                # Very dark brown or necrotic lesions imply Black Rot
-                if avg_val < 95:
-                    pred_name = "Apple Black Rot"
-                # Orange/Yellowish-Red spots imply Rust
-                elif 5 <= avg_hue <= 25 and avg_val > 105:
-                    pred_name = "Cedar Apple Rust"
-                else:
-                    pred_name = "Apple Scab"
+                pred_name = "Apple Scab"
         
         # If healthy, discard raw spot overlay drawings to show clean leaf
         if pred_name == "Apple Healthy":
@@ -504,6 +509,98 @@ class PlantDiseaseClassifier:
             "metadata": meta
         }
 
+    def _predict_generic(self, clahe_bgr, crop_name):
+        """
+        Generic heuristic classifier for crops without a trained model
+        (Tomato, Tea, Coffee, Maize, etc.).
+        Applies the same spot-ratio analysis as Apple, producing a preliminary
+        disease label that the LLM layer in vision_app.py will verify and enrich.
+        """
+        hsv = cv2.cvtColor(clahe_bgr, cv2.COLOR_BGR2HSV)
+        h, w, _ = clahe_bgr.shape
+
+        lower_leaf = np.array([20, 25, 30])
+        upper_leaf = np.array([110, 255, 230])
+        leaf_mask = cv2.inRange(hsv, lower_leaf, upper_leaf)
+        leaf_pixels = cv2.countNonZero(leaf_mask) or (h * w)
+
+        lower_green = np.array([35, 40, 40])
+        upper_green = np.array([90, 255, 230])
+        green_mask = cv2.inRange(hsv, lower_green, upper_green)
+        spot_mask = cv2.bitwise_and(leaf_mask, cv2.bitwise_not(green_mask))
+
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        spot_mask = cv2.morphologyEx(spot_mask, cv2.MORPH_OPEN, kernel)
+
+        spot_pixels = cv2.countNonZero(spot_mask)
+        spot_ratio = (spot_pixels / leaf_pixels) * 100
+
+        contours, _ = cv2.findContours(spot_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        annotated_bgr = clahe_bgr.copy()
+        spot_count = 0
+        hues = []
+
+        for c in contours:
+            area = cv2.contourArea(c)
+            if area > 8:
+                x_c, y_c, w_c, h_c = cv2.boundingRect(c)
+                roi = hsv[y_c:y_c + h_c, x_c:x_c + w_c]
+                m_roi = spot_mask[y_c:y_c + h_c, x_c:x_c + w_c]
+                mean_val = cv2.mean(roi, mask=m_roi)
+                hues.append(mean_val[0])
+                cv2.rectangle(annotated_bgr, (x_c, y_c), (x_c + w_c, y_c + h_c), (99, 180, 100), 2)
+                spot_count += 1
+
+        avg_hue = np.mean(hues) if hues else 15
+
+        if spot_ratio < 1.5 and spot_count <= 4:
+            pred = f"{crop_name} Healthy"
+            confidence = 94.5
+        elif avg_hue < 20:
+            pred = f"{crop_name} Leaf Blight"
+            confidence = min(97.0, 75.0 + spot_ratio * 2.5)
+        elif 20 <= avg_hue < 35:
+            pred = f"{crop_name} Early Rust / Spot"
+            confidence = min(96.0, 70.0 + spot_ratio * 2.0)
+        else:
+            pred = f"{crop_name} Fungal Infection"
+            confidence = min(95.0, 68.0 + spot_ratio * 2.0)
+
+        confidence = round(confidence, 2)
+
+        if pred.endswith("Healthy"):
+            annotated_bgr = clahe_bgr.copy()
+
+        cv2.putText(
+            annotated_bgr,
+            f"{pred} ({confidence}%) [LLM-Verify]",
+            (15, 30),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (99, 180, 100), 2
+        )
+
+        return {
+            "crop_type": crop_name,
+            "prediction": pred,
+            "display_name": pred,
+            "confidence": confidence,
+            "spot_ratio": round(spot_ratio, 2),
+            "spot_count": spot_count,
+            "top_3": [
+                {"class_name": pred, "label": pred, "confidence": confidence},
+                {"class_name": f"{crop_name} Healthy", "label": "Healthy", "confidence": round((100 - confidence) * 0.6, 2)},
+                {"class_name": f"{crop_name} Leaf Blight", "label": "Blight", "confidence": round((100 - confidence) * 0.4, 2)},
+            ],
+            "processed_bgr": annotated_bgr,
+            "clahe_bgr": clahe_bgr,
+            "yolo_bgr": annotated_bgr,
+            "metadata": {
+                "severity": "Unknown — awaiting LLM verification",
+                "description": f"Preliminary heuristic scan of {crop_name} leaf. LLM expert analysis is verifying this result.",
+                "organic_treatment": "Neem Oil Spray (2%) + Bio-fungicide Trichoderma viride",
+                "chemical_treatment": "Broad-spectrum Mancozeb 75% WP (2g/L) — pending LLM confirmation"
+            }
+        }
+
     def predict(self, image_path, apply_shadow_removal=True, crop_type=None):
         """
         Run multi-crop inference. Actively draws bounding boxes or runs classification
@@ -519,17 +616,7 @@ class PlantDiseaseClassifier:
         else:
             clahe_bgr = img_bgr.copy()
 
-        img_name_lower = os.path.basename(image_path).lower()
-
-        # 1. Determine/override crop type based on filename keywords if present
-        if "apple" in img_name_lower or "scab" in img_name_lower or "rust" in img_name_lower or "rot" in img_name_lower:
-            crop_type = "Apple"
-        elif "cotton" in img_name_lower or "blight" in img_name_lower or "curl" in img_name_lower or "wilt" in img_name_lower:
-            crop_type = "Cotton"
-        elif "hibiscus" in img_name_lower or "citruspot" in img_name_lower or "senescent" in img_name_lower or "wrinkled" in img_name_lower:
-            crop_type = "Hibiscus"
-
-        # 2. Run visual contour shape and color heuristic if Auto-Detect is specified
+        # 1. Run visual contour shape and color heuristic if Auto-Detect is specified
         if not crop_type or crop_type == "Auto-Detect":
             hsv = cv2.cvtColor(clahe_bgr, cv2.COLOR_BGR2HSV)
             
@@ -550,13 +637,18 @@ class PlantDiseaseClassifier:
             
             crop_type = self._auto_detect_crop(hsv, leaf_mask)
 
-        # 3. Route to the appropriate sub-model prediction method
+        # 2. Route to the appropriate sub-model prediction method
         if crop_type == "Apple":
-            result = self._predict_apple(clahe_bgr, img_name_lower)
+            result = self._predict_apple(clahe_bgr)
         elif crop_type == "Cotton":
             result = self._predict_cotton(clahe_bgr, image_path)
-        else:
+        elif crop_type in ("Hibiscus",):
             result = self._predict_hibiscus(clahe_bgr)
+        else:
+            # Generic LLM-assisted fallback for Tomato, Tea, Coffee, Maize, etc.
+            # Uses the same heuristic spot-ratio engine as Apple, then the LLM
+            # corrects/enriches the result in vision_app.py step 6.
+            result = self._predict_generic(clahe_bgr, crop_type)
 
         # Include runtime tags indicating whether the crop was auto-detected or manual
         result["detected_crop"] = crop_type

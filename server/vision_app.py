@@ -6,6 +6,7 @@ Runs on Port 5001 (proxied via Vite dev server at /api/vision).
 import os
 import io
 import json
+import requests
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
@@ -16,6 +17,8 @@ from vision_services.organic_service import get_organic_remedies
 from vision_services.outbreak_radar import calculate_outbreak_risk
 from vision_services.ai_service import generate_llm_expert_analysis, answer_agronomic_chat_question
 from vision_services.pdf_generator import generate_diagnostic_pdf
+from vision_services.carbon_service import calculate_carbon_score
+from vision_services.weather_service import fetch_7day_forecast
 
 app = Flask(__name__)
 CORS(app)
@@ -93,6 +96,12 @@ def analyze_leaf_image():
             user_api_key=user_api_key
         )
 
+        # 7. Carbon Footprint Score
+        carbon_info = calculate_carbon_score(
+            ai_expert_res.get("chemical_controls", []),
+            ai_expert_res.get("organic_controls", [])
+        )
+
         # Combine payload
         final_payload = {
             "crop": ai_expert_res.get("verified_crop", engine_res["crop"]),
@@ -112,7 +121,8 @@ def analyze_leaf_image():
             "soil": soil_info,
             "fertilizer": fertilizer_info,
             "organic": organic_info,
-            "radar": radar_info
+            "radar": radar_info,
+            "carbon": carbon_info
         }
 
         return jsonify(final_payload)
@@ -145,6 +155,27 @@ def get_weather():
     location = request.args.get("location", "Nagpur")
     data = fetch_weather_and_soil(location)
     return jsonify(data)
+
+
+@app.route("/api/vision/forecast", methods=["GET"])
+def get_forecast():
+    """7-Day disease risk forecast endpoint."""
+    location = request.args.get("location", "Nagpur")
+    # Geocode the location to lat/lng first
+    lat, lng = 21.1458, 79.0882  # default Nagpur
+    try:
+        geo_res = requests.get(
+            "https://geocoding-api.open-meteo.com/v1/search",
+            params={"name": location, "count": 1, "language": "en", "format": "json"},
+            timeout=4
+        )
+        if geo_res.status_code == 200 and "results" in geo_res.json():
+            res0 = geo_res.json()["results"][0]
+            lat, lng = res0["latitude"], res0["longitude"]
+    except Exception as e:
+        print(f"[forecast] Geocoding error: {e}")
+    forecast = fetch_7day_forecast(lat, lng)
+    return jsonify({"forecast": forecast})
 
 
 @app.route("/api/vision/pdf", methods=["POST"])

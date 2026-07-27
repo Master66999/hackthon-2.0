@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Leaf, Camera, UploadSimple, Sun, Thermometer, Wind, Drop,
   Sparkle, DownloadSimple, PaperPlaneRight, SpeakerHigh, Key,
-  Warning, ArrowsClockwise, CheckCircle, MagnifyingGlassPlus, CaretRight
+  Warning, ArrowsClockwise, CheckCircle, MagnifyingGlassPlus, CaretRight,
+  Plant, Lightning
 } from '@phosphor-icons/react';
 import './VisionConsole.css';
 
@@ -13,21 +14,21 @@ const PRESETS = [
     id: 'apple_scab',
     name: 'Apple Scab Demo',
     crop: 'Apple',
-    url: '/images/apple_crop.png',
+    url: '/images/apple.png',
     disease: 'Apple Scab (Venturia inaequalis)'
   },
   {
     id: 'cotton_blight',
     name: 'Cotton Blight Demo',
     crop: 'Cotton',
-    url: '/images/cotton_crop.png',
+    url: '/images/cotton.png',
     disease: 'Bacterial Blight (Xanthomonas)'
   },
   {
     id: 'hibiscus_spot',
     name: 'Fungal Hibiscus Demo',
     crop: 'Hibiscus',
-    url: '/images/tea_crop.png',
+    url: '/images/tea.png',
     disease: 'Hibiscus Fungal Spot'
   }
 ];
@@ -60,10 +61,48 @@ export default function VisionConsole() {
   // Speech Language
   const [lang, setLang] = useState('en');
 
+  // Health banner & 7-day forecast
+  const [serviceOnline, setServiceOnline] = useState(null); // null=checking, true, false
+  const [forecast, setForecast] = useState([]);
+
+  // Animated loading step labels
+  const LOADING_STEPS = [
+    'Running CLAHE Enhancement…',
+    'Detecting Crop Type…',
+    'Running ML Inference…',
+    'Fetching Live Climate Data…',
+    'Calculating Outbreak Risk…',
+    'Generating Expert LLM Report…',
+  ];
+  const [loadingStep, setLoadingStep] = useState(0);
+  const loadingTimerRef = useRef(null);
+
   // Load Initial Weather & Default Analysis
   useEffect(() => {
     fetchInitialWeather();
+    checkServiceHealth();
   }, []);
+
+  const checkServiceHealth = async () => {
+    try {
+      const res = await fetch('/api/vision/health', { signal: AbortSignal.timeout(4000) });
+      setServiceOnline(res.ok);
+    } catch {
+      setServiceOnline(false);
+    }
+  };
+
+  const fetchForecast = async (location) => {
+    try {
+      const res = await fetch(`/api/vision/forecast?location=${encodeURIComponent(location)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setForecast(data.forecast || []);
+      }
+    } catch (err) {
+      console.log('Forecast fetch notice:', err);
+    }
+  };
 
   const fetchInitialWeather = async () => {
     try {
@@ -79,6 +118,7 @@ export default function VisionConsole() {
     } catch (err) {
       console.log('Weather fetch notice:', err);
     }
+    fetchForecast(locationQuery);
   };
 
   // Upload File Handler
@@ -138,6 +178,13 @@ export default function VisionConsole() {
   // Execute Analysis API
   const runVisionAnalysis = async (fileToUpload) => {
     setLoading(true);
+    setLoadingStep(0);
+    // Cycle through step labels every 1.4s while loading
+    let step = 0;
+    loadingTimerRef.current = setInterval(() => {
+      step = Math.min(step + 1, LOADING_STEPS.length - 1);
+      setLoadingStep(step);
+    }, 1400);
     try {
       const formData = new FormData();
       if (fileToUpload) {
@@ -164,6 +211,7 @@ export default function VisionConsole() {
       console.error('Vision error:', err);
       alert(`Analysis error: ${err.message}`);
     } finally {
+      clearInterval(loadingTimerRef.current);
       setLoading(false);
     }
   };
@@ -174,6 +222,9 @@ export default function VisionConsole() {
     setImagePreview(preset.url);
     try {
       const response = await fetch(preset.url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch preset image: ${response.statusText} (${response.status})`);
+      }
       const blob = await response.blob();
       const file = new File([blob], `${preset.id}.png`, { type: 'image/png' });
       setImageFile(file);
@@ -287,6 +338,20 @@ export default function VisionConsole() {
 
   return (
     <main className="vision-console container">
+      {/* Service Health Banner */}
+      {serviceOnline === false && (
+        <motion.div
+          className="vc-health-banner"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Warning size={18} weight="fill" />
+          <span>
+            <strong>Vision AI Offline</strong> — The Python Flask backend (port 5001) is not reachable.
+            Run <code>python vision_app.py</code> in the <code>server/</code> directory.
+          </span>
+        </motion.div>
+      )}
       {/* Header Banner */}
       <header className="vc-header">
         <div className="vc-header__titles">
@@ -377,6 +442,10 @@ export default function VisionConsole() {
                     <option value="Apple">Apple (Pome Fruit)</option>
                     <option value="Cotton">Cotton (Gossypium)</option>
                     <option value="Hibiscus">Hibiscus (Malvaceae)</option>
+                    <option value="Tomato">Tomato (Solanum)</option>
+                    <option value="Tea">Tea (Camellia sinensis)</option>
+                    <option value="Coffee">Coffee (Coffea)</option>
+                    <option value="Maize">Maize / Corn (Zea mays)</option>
                   </select>
                 </div>
 
@@ -422,7 +491,18 @@ export default function VisionConsole() {
                     {loading && (
                       <div className="vc-loading-overlay">
                         <div className="vc-spinner" />
-                        <p>Processing CLAHE & ML Models…</p>
+                        <AnimatePresence mode="wait">
+                          <motion.p
+                            key={loadingStep}
+                            className="vc-loading-step"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.35 }}
+                          >
+                            {LOADING_STEPS[loadingStep]}
+                          </motion.p>
+                        </AnimatePresence>
                       </div>
                     )}
                   </div>
@@ -458,6 +538,55 @@ export default function VisionConsole() {
                 </div>
                 <p className="vc-quote-text">"{telemetry.expert_quote}"</p>
                 <span className="vc-quote-model">Engine: {telemetry.llm_used || 'LeafSense ML Pipeline'}</span>
+              </motion.div>
+            )}
+
+            {/* Carbon Footprint Score Card */}
+            {telemetry?.carbon && (
+              <motion.div
+                className="vc-card neo-raised vc-carbon-card"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
+                <div className="vc-carbon-header">
+                  <Plant size={20} className="vc-icon-moss" />
+                  <h4>Climate Impact Score</h4>
+                  <span className={`vc-carbon-badge vc-carbon-badge--${telemetry.carbon.rating.toLowerCase()}`}>
+                    {telemetry.carbon.rating}
+                  </span>
+                </div>
+
+                <div className="vc-carbon-bars">
+                  <div className="vc-carbon-row">
+                    <span className="vc-carbon-label">⚗️ Chemical Path</span>
+                    <div className="vc-carbon-track">
+                      <div
+                        className="vc-carbon-fill vc-carbon-fill--chem"
+                        style={{ width: `${Math.min(100, (telemetry.carbon.chemical_co2 / 12) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="vc-carbon-val">{telemetry.carbon.chemical_co2} kg CO₂e/ha</span>
+                  </div>
+                  <div className="vc-carbon-row">
+                    <span className="vc-carbon-label">🌿 Organic Path</span>
+                    <div className="vc-carbon-track">
+                      <div
+                        className="vc-carbon-fill vc-carbon-fill--org"
+                        style={{ width: `${Math.max(2, Math.min(100, (Math.max(0, telemetry.carbon.organic_co2) / 12) * 100))}%` }}
+                      />
+                    </div>
+                    <span className="vc-carbon-val">{telemetry.carbon.organic_co2} kg CO₂e/ha</span>
+                  </div>
+                </div>
+
+                <div className="vc-carbon-savings">
+                  <Lightning size={16} weight="fill" className="vc-icon-moss" />
+                  <span>{telemetry.carbon.summary}</span>
+                </div>
+                {telemetry.carbon.biochar_bonus && (
+                  <div className="vc-carbon-biochar-tag">🪵 Biochar sequesters carbon — net negative footprint!</div>
+                )}
               </motion.div>
             )}
           </div>
@@ -714,6 +843,51 @@ export default function VisionConsole() {
               </ul>
             </div>
           </div>
+
+          {/* 7-Day Disease Risk Forecast Chart */}
+          {forecast.length > 0 && (
+            <div className="vc-card neo-raised" style={{ marginTop: '1.5rem' }}>
+              <h3 className="vc-card__title">
+                <Lightning size={20} className="vc-icon-terracotta" />
+                7-Day Disease Risk Forecast
+              </h3>
+              <p className="vc-card__subtitle">
+                Climate-driven fungal & bacterial outbreak probability over the next 7 days based on live Open-Meteo data.
+              </p>
+              <div className="vc-forecast-chart">
+                {forecast.map((d, i) => (
+                  <div key={i} className="vc-forecast-col">
+                    <span className="vc-forecast-risk-label">{d.disease_risk}%</span>
+                    <div className="vc-forecast-bar-wrap">
+                      <motion.div
+                        className="vc-forecast-bar"
+                        style={{
+                          background: d.disease_risk > 65
+                            ? 'linear-gradient(to top, #e05050, #f08040)'
+                            : d.disease_risk > 40
+                            ? 'linear-gradient(to top, #d4a94a, #f0c850)'
+                            : 'linear-gradient(to top, var(--moss), #6abf8a)'
+                        }}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${d.disease_risk}%` }}
+                        transition={{ duration: 0.7, delay: i * 0.08, ease: 'easeOut' }}
+                      />
+                    </div>
+                    <div className="vc-forecast-meta">
+                      <span className="vc-forecast-day">{d.day}</span>
+                      <span className="vc-forecast-temp">{d.temp_max}°C</span>
+                      <span className="vc-forecast-hum">{d.humidity_avg}% RH</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="vc-forecast-legend">
+                <span className="vc-legend-dot" style={{ background: '#6abf8a' }} /> Low Risk
+                <span className="vc-legend-dot" style={{ background: '#f0c850' }} /> Moderate Risk
+                <span className="vc-legend-dot" style={{ background: '#e05050' }} /> High Risk
+              </div>
+            </div>
+          )}
         </div>
       )}
 

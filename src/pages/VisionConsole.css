@@ -700,3 +700,197 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Service Health Banner ───────────────────────────────────────────── */
+.vc-health-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1.2rem;
+  background: linear-gradient(135deg, rgba(220, 80, 60, 0.12), rgba(220, 80, 60, 0.06));
+  border: 1px solid rgba(220, 80, 60, 0.35);
+  border-radius: 10px;
+  color: #c03020;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+  backdrop-filter: blur(4px);
+}
+.vc-health-banner code {
+  background: rgba(220, 80, 60, 0.12);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-family: 'Fira Mono', monospace;
+  font-size: 0.82em;
+}
+
+/* ── Animated Loading Step Label ────────────────────────────────────── */
+.vc-loading-step {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--moss);
+  letter-spacing: 0.03em;
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Carbon Footprint Score Card ─────────────────────────────────────── */
+.vc-carbon-card {
+  margin-top: 1rem;
+  border-left: 3px solid var(--moss);
+}
+
+.vc-carbon-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.vc-carbon-header h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+  flex: 1;
+  margin: 0;
+}
+
+.vc-carbon-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25em 0.65em;
+  border-radius: 999px;
+}
+.vc-carbon-badge--excellent { background: rgba(60, 160, 80, 0.15); color: #2a8040; }
+.vc-carbon-badge--good      { background: rgba(80, 140, 60, 0.15); color: #3a7030; }
+.vc-carbon-badge--moderate  { background: rgba(180, 140, 40, 0.15); color: #8a6010; }
+.vc-carbon-badge--minimal   { background: rgba(180, 80, 40, 0.12); color: #903020; }
+
+.vc-carbon-bars { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 0.9rem; }
+
+.vc-carbon-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 105px;
+  align-items: center;
+  gap: 0.65rem;
+}
+.vc-carbon-label { font-size: 0.8rem; color: var(--ink-light); white-space: nowrap; }
+.vc-carbon-val   { font-size: 0.78rem; font-weight: 600; color: var(--ink); text-align: right; white-space: nowrap; }
+
+.vc-carbon-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.12);
+}
+.vc-carbon-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.33, 1, 0.68, 1);
+}
+.vc-carbon-fill--chem { background: linear-gradient(to right, #e05050, #f08040); }
+.vc-carbon-fill--org  { background: linear-gradient(to right, var(--moss), #6abf8a); }
+
+.vc-carbon-savings {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--ink-light);
+  line-height: 1.5;
+  padding: 0.6rem 0.8rem;
+  background: rgba(100, 155, 90, 0.07);
+  border-radius: 8px;
+  margin-top: 0.25rem;
+}
+.vc-carbon-savings .vc-icon-moss { flex-shrink: 0; margin-top: 2px; }
+
+.vc-carbon-biochar-tag {
+  margin-top: 0.6rem;
+  padding: 0.4rem 0.75rem;
+  background: linear-gradient(135deg, rgba(60,160,80,0.1), rgba(40,120,60,0.08));
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2a7040;
+  border: 1px solid rgba(60,160,80,0.2);
+}
+
+/* ── 7-Day Disease Risk Forecast Chart ───────────────────────────────── */
+.vc-forecast-chart {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  height: 180px;
+  padding: 0.5rem 0;
+  margin-top: 1rem;
+}
+
+.vc-forecast-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  height: 100%;
+}
+
+.vc-forecast-risk-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink-light);
+  text-align: center;
+}
+
+.vc-forecast-bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: var(--surface);
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.vc-forecast-bar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  min-height: 4px;
+}
+
+.vc-forecast-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid var(--surface);
+  width: 100%;
+}
+.vc-forecast-day  { font-size: 0.7rem; font-weight: 700; color: var(--ink); }
+.vc-forecast-temp { font-size: 0.65rem; color: #e07030; font-weight: 600; }
+.vc-forecast-hum  { font-size: 0.62rem; color: #4090c0; }
+
+.vc-forecast-legend {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 0.9rem;
+  font-size: 0.75rem;
+  color: var(--ink-light);
+}
+.vc-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.3rem;
+}
+
+@media (max-width: 600px) {
+  .vc-carbon-row { grid-template-columns: 90px 1fr 80px; }
+  .vc-forecast-chart { gap: 0.3rem; }
+  .vc-forecast-risk-label { font-size: 0.6rem; }
+}
