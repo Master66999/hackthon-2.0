@@ -22,7 +22,9 @@ services:
         value: 5000
 
   # 3. Vite React Web App Frontend
-  - type: static
+  - type: web
     name: leafsense-web
+    env: static
+    region: singapore
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
