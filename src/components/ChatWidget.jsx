@@ -4,6 +4,7 @@ import {
   ChatTeardropDots, X, PaperPlaneRight, Sparkle, SpeakerHigh,
   Plant, CaretUp, Robot
 } from '@phosphor-icons/react';
+import { getVisionApiUrl } from '../utils/apiConfig.js';
 import './ChatWidget.css';
 
 const PRESET_QUESTIONS = [
@@ -47,7 +48,7 @@ export default function ChatWidget() {
 
     try {
       const apiKey = localStorage.getItem('leafsense_ai_key') || '';
-      const res = await fetch('/api/vision/chat', {
+      const res = await fetch(getVisionApiUrl('/api/vision/chat'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

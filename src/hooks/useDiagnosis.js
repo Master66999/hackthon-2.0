@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { simulateDiagnosis } from '../data/mockDiagnosis.js';
 import { CROPS } from '../data/crops.js';
+import { getVisionApiUrl } from '../utils/apiConfig.js';
 
 /**
  * Hook encapsulating diagnosis state machine.
@@ -35,7 +36,7 @@ export function useDiagnosis() {
       }
 
       // 2. Fetch from real /api/vision/analyze endpoint
-      const response = await fetch('/api/vision/analyze', {
+      const response = await fetch(getVisionApiUrl('/api/vision/analyze'), {
         method: 'POST',
         headers: localApiKey ? { 'X-AI-API-Key': localApiKey } : {},
         body: formData

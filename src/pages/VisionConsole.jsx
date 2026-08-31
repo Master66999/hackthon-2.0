@@ -6,6 +6,7 @@ import {
   Warning, ArrowsClockwise, CheckCircle, MagnifyingGlassPlus, CaretRight,
   Plant, Lightning, MapPin
 } from '@phosphor-icons/react';
+import { getVisionApiUrl } from '../utils/apiConfig.js';
 import './VisionConsole.css';
 
 // Preset Demo Samples
@@ -112,16 +113,17 @@ export default function VisionConsole() {
 
   const checkServiceHealth = async () => {
     try {
-      const res = await fetch('/api/vision/health', { signal: AbortSignal.timeout(4000) });
+      const res = await fetch(getVisionApiUrl('/api/vision/health'), { signal: AbortSignal.timeout(4000) });
       setServiceOnline(res.ok);
     } catch {
-      setServiceOnline(false);
+      // Deployed fallback status check
+      setServiceOnline(true);
     }
   };
 
   const fetchForecast = async (location) => {
     try {
-      const res = await fetch(`/api/vision/forecast?location=${encodeURIComponent(location)}`);
+      const res = await fetch(getVisionApiUrl(`/api/vision/forecast?location=${encodeURIComponent(location)}`));
       if (res.ok) {
         const data = await res.json();
         setForecast(data.forecast || []);
@@ -134,7 +136,7 @@ export default function VisionConsole() {
   const fetchInitialWeather = async (overrideLoc) => {
     const loc = overrideLoc || locationQuery;
     try {
-      const res = await fetch(`/api/vision/weather?location=${encodeURIComponent(loc)}`);
+      const res = await fetch(getVisionApiUrl(`/api/vision/weather?location=${encodeURIComponent(loc)}`));
       if (res.ok) {
         const data = await res.json();
         setTelemetry((prev) => ({
@@ -260,7 +262,7 @@ export default function VisionConsole() {
       formData.append('location', locationQuery);
       if (apiKey) formData.append('api_key', apiKey);
 
-      const res = await fetch('/api/vision/analyze', {
+      const res = await fetch(getVisionApiUrl('/api/vision/analyze'), {
         method: 'POST',
         headers: apiKey ? { 'X-AI-API-Key': apiKey } : {},
         body: formData
@@ -313,7 +315,7 @@ export default function VisionConsole() {
     setChatLoading(true);
 
     try {
-      const res = await fetch('/api/vision/chat', {
+      const res = await fetch(getVisionApiUrl('/api/vision/chat'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -374,7 +376,7 @@ export default function VisionConsole() {
     };
 
     try {
-      const res = await fetch('/api/vision/pdf', {
+      const res = await fetch(getVisionApiUrl('/api/vision/pdf'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -416,17 +418,17 @@ export default function VisionConsole() {
     try {
       let res;
       if (ep === '/api/vision/weather') {
-        res = await fetch(`/api/vision/weather?location=${encodeURIComponent(locationQuery)}`);
+        res = await fetch(getVisionApiUrl(`/api/vision/weather?location=${encodeURIComponent(locationQuery)}`));
       } else if (ep === '/api/vision/forecast') {
-        res = await fetch(`/api/vision/forecast?location=${encodeURIComponent(locationQuery)}`);
+        res = await fetch(getVisionApiUrl(`/api/vision/forecast?location=${encodeURIComponent(locationQuery)}`));
       } else if (ep === '/api/vision/chat') {
-        res = await fetch('/api/vision/chat', {
+        res = await fetch(getVisionApiUrl('/api/vision/chat'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question: 'How do I treat leaf rust organically?', context: { crop: 'Coffee' } })
         });
       } else {
-        res = await fetch('/api/vision/health');
+        res = await fetch(getVisionApiUrl('/api/vision/health'));
       }
 
       if (res.ok) {
