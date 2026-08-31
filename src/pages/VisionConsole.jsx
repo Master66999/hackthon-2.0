@@ -277,7 +277,11 @@ export default function VisionConsole() {
       setTelemetry(data);
     } catch (err) {
       console.error('Vision error:', err);
-      alert(`Analysis error: ${err.message}`);
+      if (err.message === 'Failed to fetch') {
+        alert('⚡ Server is warming up on Render (free tier)! Please click Scan / Preset again in 10-15 seconds.');
+      } else {
+        alert(`Analysis error: ${err.message}`);
+      }
     } finally {
       clearInterval(loadingTimerRef.current);
       setLoading(false);

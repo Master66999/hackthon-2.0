@@ -23,7 +23,14 @@ from vision_services.water_service import calculate_precision_water_advisory
 from vision_services.crop_recommender import recommend_climate_resilient_crops
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-AI-API-Key"
+    return response
 
 # Ensure reports directory exists
 REPORTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "reports"))
