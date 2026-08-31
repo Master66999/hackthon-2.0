@@ -11,13 +11,16 @@ import cv2
 import base64
 import numpy as np
 from PIL import Image
-import torch
-import torch.nn as nn
-from torchvision import transforms, models
-from .dataset_matcher import identify_crop_by_dataset
-
-# Global device configuration
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+TORCH_AVAILABLE = False
+try:
+    import torch
+    import torch.nn as nn
+    from torchvision import transforms, models
+    TORCH_AVAILABLE = True
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+except Exception as e:
+    print(f"[ModelEngine] PyTorch import notice: {e}")
+    DEVICE = "cpu"
 
 # Class Labels Databases
 HIBISCUS_CLASSES = [
@@ -204,6 +207,9 @@ class PlantDiseaseClassifier:
 
     def _load_hibiscus_model(self):
         """Load trained Hibiscus PyTorch CNN model."""
+        if not TORCH_AVAILABLE:
+            print("[ModelEngine] PyTorch disabled for memory optimization.")
+            return
         base_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ml_models", "New folder")
         model_path = os.path.join(base_dir, "hibiscus_cnn_model.pth")
         
