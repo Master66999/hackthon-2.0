@@ -25,6 +25,5 @@ services:
   - type: web
     name: leafsense-web
     env: static
-    region: singapore
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
