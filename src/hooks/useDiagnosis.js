@@ -26,7 +26,7 @@ export function useDiagnosis() {
       // Map cropId to match what backend expects ('Cotton', 'Apple', 'Hibiscus', or auto-detect name)
       const cropName = cropId.charAt(0).toUpperCase() + cropId.slice(1);
       formData.append('crop', cropName);
-      formData.append('location', 'Nagpur'); // Default location context
+      formData.append('location', 'Pune'); // Default location context
 
       // Retrieve optional local storage API key if configured
       const localApiKey = localStorage.getItem('leafsense_ai_key') || '';

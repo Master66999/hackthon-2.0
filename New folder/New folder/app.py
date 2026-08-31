@@ -77,7 +77,7 @@ def analyze_image():
             return jsonify({"status": "error", "message": "No valid image provided."}), 400
 
         # Location parameters
-        location = request.form.get("location", "Nagpur").strip()
+        location = request.form.get("location", "Pune").strip()
         lat_val = request.form.get("lat")
         lon_val = request.form.get("lon")
         

@@ -14,6 +14,7 @@ from PIL import Image
 import torch
 import torch.nn as nn
 from torchvision import transforms, models
+from .dataset_matcher import identify_crop_by_dataset
 
 # Global device configuration
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -246,48 +247,247 @@ class PlantDiseaseClassifier:
         except Exception as e:
             print(f"[ModelEngine] Cotton YOLO load error: {e}")
 
-    def _auto_detect_crop(self, hsv, leaf_mask):
-        """Robust geometric and color-based auto-detection of crop types."""
-        contours, _ = cv2.findContours(leaf_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if not contours:
-            return "Cotton"  # Default fallback
-            
-        main_contour = max(contours, key=cv2.contourArea)
-        area = cv2.contourArea(main_contour)
-        hull = cv2.convexHull(main_contour)
-        hull_area = cv2.contourArea(hull)
-        solidity = float(area) / hull_area if hull_area > 0 else 1.0
-        
-        perimeter = cv2.arcLength(main_contour, True)
-        # Circularity score (lobed/palmate Cotton leaves have low circularity)
-        circularity = (4 * np.pi * area) / (perimeter ** 2) if perimeter > 0 else 0.0
-        
-        # Calculate convexity defects to detect deep lobes (unique to Cotton leaves)
-        defect_count = 0
-        try:
-            hull_indices = cv2.convexHull(main_contour, returnPoints=False)
-            if len(hull_indices) > 3:
-                defects = cv2.convexityDefects(main_contour, hull_indices)
-                if defects is not None:
-                    for i in range(defects.shape[0]):
-                        s, e, f, d = defects[i, 0]
-                        depth = d / 256.0
-                        if depth > 10.0:  # defect depth threshold in pixels
-                            defect_count += 1
-        except Exception as e:
-            print(f"[ModelEngine] Convexity defect notice: {e}")
+    # ──────────────────────────────────────────────────────────────
+    #  NEW MULTI-FEATURE SCORING ALGORITHM  (replaces old heuristic)
+    # ──────────────────────────────────────────────────────────────
+    def _identify_crop_type(self, bgr, hsv, leaf_mask):
+        """
+        6-feature weighted scoring engine for crop-type identification.
 
-        # Cotton: Highly lobed leaves have lower solidity (<0.83), circularity (<0.54), or deep convexity defects (defects >= 2)
-        if solidity < 0.83 or circularity < 0.54 or defect_count >= 2:
-            return "Cotton"
+        Each feature independently gives points to Apple / Cotton / Hibiscus.
+        The crop with the highest total score is returned together with a
+        normalised confidence value (0-1).  If max confidence < 0.35 the
+        image most likely contains no recognisable leaf → returns 'Unknown'.
+
+        Features
+        --------
+        F1  Lobe & convexity geometry   (weight 30)
+        F2  Colour-channel statistics   (weight 25)
+        F3  Surface texture roughness   (weight 15)
+        F4  Leaf-margin edge density    (weight 15)
+        F5  Hu shape-moment invariants  (weight 10)
+        F6  Green pixel coverage guard  (weight  5)
+        """
+        scores = {"Apple": 0.0, "Cotton": 0.0, "Hibiscus": 0.0}
+        h_img, w_img = bgr.shape[:2]
+        total_px = h_img * w_img
+
+        # ── Guard: does the image actually contain a green leaf region? ──────
+        lower_any = np.array([15, 18, 18])
+        upper_any = np.array([120, 255, 255])
+        any_green = cv2.inRange(hsv, lower_any, upper_any)
+        green_px  = cv2.countNonZero(any_green)
+        coverage  = green_px / max(total_px, 1)
+
+        if coverage < 0.04:          # < 4 % of frame is leaf-coloured
+            print("[CropID] Image coverage too low — no leaf detected.")
+            return "Unknown", 0.0
+
+        # Use the supplied mask OR fall back to the relaxed green mask
+        active_mask = leaf_mask if cv2.countNonZero(leaf_mask) > total_px * 0.02 else any_green
+        leaf_px = cv2.countNonZero(active_mask)
+
+        # ─────────────────────────────────────────────────────────────────────
+        # F1 · LOBE & CONVEXITY GEOMETRY  (weight 30)
+        # Cotton: palmate, 5-7 pointed lobes → low solidity, many deep defects
+        # Apple:  ovate-elliptical, serrated margin → high solidity, few defects
+        # Hibiscus: variable but typically cordate → medium solidity
+        # ─────────────────────────────────────────────────────────────────────
+        contours, _ = cv2.findContours(active_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        main_c = None
+        solidity = 1.0
+        circularity = 1.0
+        deep_defects = 0
+        aspect_ratio = 1.0
+
+        if contours:
+            min_area = total_px * 0.02
+            big = [c for c in contours if cv2.contourArea(c) >= min_area]
+            if big:
+                main_c = max(big, key=cv2.contourArea)
+                area_c = cv2.contourArea(main_c)
+                hull   = cv2.convexHull(main_c)
+                hull_a = cv2.contourArea(hull)
+                peri   = cv2.arcLength(main_c, True)
+
+                solidity    = area_c / hull_a if hull_a > 0 else 1.0
+                circularity = (4 * np.pi * area_c) / (peri ** 2) if peri > 0 else 1.0
+
+                # Bounding-box aspect ratio
+                _, _, wb, hb = cv2.boundingRect(main_c)
+                aspect_ratio = wb / hb if hb > 0 else 1.0
+
+                # Deep convexity defects → count lobes
+                try:
+                    hull_idx = cv2.convexHull(main_c, returnPoints=False)
+                    if hull_idx is not None and len(hull_idx) > 3:
+                        defects = cv2.convexityDefects(main_c, hull_idx)
+                        if defects is not None:
+                            for i in range(defects.shape[0]):
+                                depth = defects[i, 0][3] / 256.0
+                                if depth > 8.0:      # moderately deep lobe
+                                    deep_defects += 1
+                except Exception:
+                    pass
+
+        # Score F1
+        if deep_defects >= 4 and solidity < 0.80:
+            scores["Cotton"]   += 30   # strongly lobed
+        elif deep_defects >= 2 and solidity < 0.86:
+            scores["Cotton"]   += 18
+            scores["Hibiscus"] += 8
+        elif solidity > 0.88 and circularity > 0.50:
+            scores["Apple"]    += 22   # compact oval
+            scores["Hibiscus"] += 6
         else:
-            # Apple vs Hibiscus: Compare average green pixel brightness (V in HSV)
-            # Hibiscus leaves are typically deep, dark forest green, while Apple leaves are brighter green.
-            mean_val = cv2.mean(hsv, mask=leaf_mask)
-            if mean_val[2] > 110:
-                return "Apple"
-            else:
-                return "Hibiscus"
+            scores["Hibiscus"] += 15   # ambiguous → favour Hibiscus (broadest)
+            scores["Apple"]    += 8
+
+        # Aspect ratio sub-score
+        if aspect_ratio > 1.15:        # wide leaf → Cotton palm-shape
+            scores["Cotton"]   += 8
+        elif aspect_ratio < 0.72:      # taller than wide → Apple
+            scores["Apple"]    += 8
+        else:
+            scores["Hibiscus"] += 4
+
+        # ─────────────────────────────────────────────────────────────────────
+        # F2 · COLOUR-CHANNEL STATISTICS  (weight 25)
+        # Apple:   bright medium green  (V 100-170, S 50-160, H 35-75)
+        # Cotton:  lighter, yellow-green (V 90-180, H 25-60)
+        # Hibiscus: deep rich green     (V 40-130, S > 55, H 55-95)
+        # ─────────────────────────────────────────────────────────────────────
+        mean_hsv = cv2.mean(hsv, mask=active_mask)
+        mh, ms, mv = mean_hsv[0], mean_hsv[1], mean_hsv[2]
+
+        # Hue sub-bands (OpenCV hue 0-180)
+        pure_green  = cv2.inRange(hsv, np.array([35, 40, 40]), np.array([78,  255, 230]))
+        yel_green   = cv2.inRange(hsv, np.array([20, 35, 50]), np.array([38,  255, 230]))
+        dark_green  = cv2.inRange(hsv, np.array([55, 30, 20]), np.array([100, 255, 145]))
+
+        pg_ratio = cv2.countNonZero(cv2.bitwise_and(active_mask, pure_green)) / max(leaf_px, 1)
+        yg_ratio = cv2.countNonZero(cv2.bitwise_and(active_mask, yel_green))  / max(leaf_px, 1)
+        dg_ratio = cv2.countNonZero(cv2.bitwise_and(active_mask, dark_green)) / max(leaf_px, 1)
+
+        # Apple: bright, medium saturation
+        if mv > 95 and 40 <= ms <= 170 and pg_ratio > 0.25:
+            scores["Apple"]    += 18
+        elif mv > 95 and pg_ratio > 0.15:
+            scores["Apple"]    += 10
+
+        # Hibiscus: darker, richer green
+        if mv < 130 and ms > 55 and dg_ratio > 0.18:
+            scores["Hibiscus"] += 20
+        elif ms > 60 and dg_ratio > 0.08:
+            scores["Hibiscus"] += 10
+
+        # Cotton: lighter, yellow-green cast
+        if mv > 85 and yg_ratio > 0.12:
+            scores["Cotton"]   += 15
+        elif yg_ratio > 0.06:
+            scores["Cotton"]   += 7
+
+        # ─────────────────────────────────────────────────────────────────────
+        # F3 · SURFACE TEXTURE ROUGHNESS  (weight 15)
+        # Cotton stellate hairs → high Laplacian variance
+        # Apple / Hibiscus smooth waxy surface → lower variance
+        # ─────────────────────────────────────────────────────────────────────
+        gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+        lap  = cv2.Laplacian(gray, cv2.CV_64F)
+        lap_masked = np.abs(lap) * (active_mask.astype(np.float32) / 255.0)
+        lap_mean = float(np.sum(lap_masked) / max(leaf_px, 1))
+
+        if lap_mean > 9.0:
+            scores["Cotton"]   += 15   # rough stellate surface
+        elif lap_mean > 5.5:
+            scores["Cotton"]   += 7
+            scores["Hibiscus"] += 4
+        else:
+            scores["Apple"]    += 10   # smooth waxy surface
+            scores["Hibiscus"] += 7
+
+        # ─────────────────────────────────────────────────────────────────────
+        # F4 · LEAF-MARGIN EDGE DENSITY  (weight 15)
+        # Apple:   finely serrated/dentate edge  → high edge density on margin
+        # Cotton:  smooth lobe margins            → low density on margin
+        # Hibiscus: variable                      → medium
+        # ─────────────────────────────────────────────────────────────────────
+        edges = cv2.Canny(gray, 40, 120)
+        k_margin = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (13, 13))
+        dilated  = cv2.dilate(active_mask, k_margin)
+        margin   = cv2.bitwise_and(dilated, cv2.bitwise_not(active_mask))
+        margin_e = cv2.countNonZero(cv2.bitwise_and(edges, margin))
+        margin_p = cv2.countNonZero(margin)
+        edge_den = margin_e / max(margin_p, 1)
+
+        if edge_den > 0.28:
+            scores["Apple"]    += 15   # densely serrated
+        elif edge_den > 0.18:
+            scores["Apple"]    += 8
+            scores["Hibiscus"] += 5
+        elif edge_den < 0.10:
+            scores["Cotton"]   += 12   # smooth lobe edges
+            scores["Hibiscus"] += 5
+        else:
+            scores["Hibiscus"] += 10
+
+        # ─────────────────────────────────────────────────────────────────────
+        # F5 · HU SHAPE-MOMENT INVARIANTS  (weight 10)
+        # Seven rotation/scale-invariant moments describe global shape
+        # ─────────────────────────────────────────────────────────────────────
+        if main_c is not None:
+            try:
+                moms  = cv2.moments(main_c)
+                hu    = cv2.HuMoments(moms).flatten()
+                # Log-transform for numerical stability
+                hu_log = -np.sign(hu) * np.log10(np.abs(hu) + 1e-10)
+                h0, h1 = float(hu_log[0]), float(hu_log[1])
+
+                # Empirically calibrated ranges
+                # h0 > 5.5  → compact, rounded (Apple)
+                # h0 4.5-5.5 → moderate (Hibiscus)
+                # h0 < 4.5  → irregular, lobed (Cotton)
+                if h0 > 5.5:
+                    scores["Apple"]    += 10
+                elif h0 < 4.2:
+                    scores["Cotton"]   += 10
+                else:
+                    scores["Hibiscus"] += 8
+            except Exception:
+                pass
+
+        # ─────────────────────────────────────────────────────────────────────
+        # F6 · COVERAGE CONFIDENCE BONUS  (weight 5)
+        # If leaf covers a large portion of frame it's a proper close-up → bonus
+        # ─────────────────────────────────────────────────────────────────────
+        if coverage > 0.30:
+            # Boost the current leader slightly
+            leader = max(scores, key=scores.get)
+            scores[leader] += 5
+
+        # ──────────────── DECISION ─────────────────────────────────────────
+        total_score = sum(scores.values())
+        winner      = max(scores, key=scores.get)
+        confidence  = scores[winner] / max(total_score, 1)
+
+        print(f"[CropID] Scores → Apple:{scores['Apple']:.0f}  "
+              f"Cotton:{scores['Cotton']:.0f}  "
+              f"Hibiscus:{scores['Hibiscus']:.0f}  "
+              f"→ {winner} ({confidence:.0%})")
+
+        if confidence < 0.35:
+            # Cannot distinguish reliably — tell the user rather than guess
+            print("[CropID] Confidence too low — returning Unknown.")
+            return "Unknown", confidence
+
+        return winner, confidence
+
+    # Keep a thin shim so the predict() call site below stays unchanged
+    def _auto_detect_crop(self, hsv, leaf_mask):
+        """Thin wrapper — delegates to the new scoring engine."""
+        bgr_placeholder = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        crop, _ = self._identify_crop_type(bgr_placeholder, hsv, leaf_mask)
+        return crop
 
     def _predict_apple(self, clahe_bgr):
         """OpenCV feature extraction & heuristic rules for Apple diseases."""
@@ -616,33 +816,78 @@ class PlantDiseaseClassifier:
         else:
             clahe_bgr = img_bgr.copy()
 
-        # 1. Run visual contour shape and color heuristic if Auto-Detect is specified
+        # ── STEP 1: Dataset Image Similarity Matching (PRIMARY) ───────────
+        # Compare the uploaded image against every reference image in
+        # public/images/.  The FILENAME of the best match tells us the crop.
         if not crop_type or crop_type == "Auto-Detect":
-            hsv = cv2.cvtColor(clahe_bgr, cv2.COLOR_BGR2HSV)
-            
-            # Segment leaf using both green tones and brown/yellow spot tones to handle disease
-            lower_green = np.array([30, 30, 30])
-            upper_green = np.array([90, 255, 255])
-            green_mask = cv2.inRange(hsv, lower_green, upper_green)
+            try:
+                match_result = identify_crop_by_dataset(clahe_bgr)
+                dataset_crop       = match_result["crop"]
+                dataset_confidence = match_result["confidence"]
+                print(f"[Engine] Dataset matcher → '{dataset_crop}' "
+                      f"(confidence {dataset_confidence:.1f}%)")
+            except Exception as e:
+                print(f"[Engine] Dataset matcher error: {e}")
+                dataset_crop, dataset_confidence = None, 0.0
 
-            lower_brown = np.array([5, 30, 30])
-            upper_brown = np.array([30, 255, 220])
-            brown_mask = cv2.inRange(hsv, lower_brown, upper_brown)
-
-            leaf_mask = cv2.bitwise_or(green_mask, brown_mask)
-            
-            # Close small gaps in the mask
-            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-            leaf_mask = cv2.morphologyEx(leaf_mask, cv2.MORPH_CLOSE, kernel)
-            
-            crop_type = self._auto_detect_crop(hsv, leaf_mask)
+            if dataset_crop and dataset_crop != "Unknown" and dataset_confidence >= 30.0:
+                # ✅ Dataset match is confident enough — use it directly
+                crop_type = dataset_crop
+                print(f"[Engine] Crop type from dataset match: {crop_type}")
+            else:
+                # ⬇ Fallback: 6-feature scoring engine
+                print("[Engine] Dataset confidence low — falling back to feature scoring.")
+                hsv = cv2.cvtColor(clahe_bgr, cv2.COLOR_BGR2HSV)
+                lower_green  = np.array([15, 18, 18])
+                upper_green  = np.array([120, 255, 255])
+                lower_brown  = np.array([4,  20, 20])
+                upper_brown  = np.array([30, 255, 240])
+                lower_yellow = np.array([15, 35, 70])
+                upper_yellow = np.array([38, 255, 255])
+                leaf_mask = cv2.bitwise_or(
+                    cv2.inRange(hsv, lower_green,  upper_green),
+                    cv2.bitwise_or(
+                        cv2.inRange(hsv, lower_brown,  upper_brown),
+                        cv2.inRange(hsv, lower_yellow, upper_yellow)
+                    )
+                )
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+                leaf_mask = cv2.morphologyEx(leaf_mask, cv2.MORPH_CLOSE, kernel)
+                leaf_mask = cv2.morphologyEx(
+                    leaf_mask, cv2.MORPH_OPEN,
+                    cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+                )
+                crop_type, _ = self._identify_crop_type(clahe_bgr, hsv, leaf_mask)
+                print(f"[Engine] Feature scoring → '{crop_type}'")
 
         # 2. Route to the appropriate sub-model prediction method
-        if crop_type == "Apple":
+        if crop_type == "Unknown":
+            # No recognisable leaf detected — return an explicit diagnostic result
+            result = {
+                "crop_type": "Unknown",
+                "prediction": "No Leaf Detected",
+                "display_name": "No Leaf Detected",
+                "confidence": 0.0,
+                "top_3": [],
+                "processed_bgr": clahe_bgr,
+                "clahe_bgr": clahe_bgr,
+                "yolo_bgr": clahe_bgr,
+                "metadata": {
+                    "severity": "N/A",
+                    "description": (
+                        "The uploaded image does not appear to contain a recognisable "
+                        "plant leaf. Please upload a clear, well-lit close-up photo of "
+                        "a single leaf against a plain or natural background."
+                    ),
+                    "organic_treatment": "N/A",
+                    "chemical_treatment": "N/A"
+                }
+            }
+        elif crop_type == "Apple":
             result = self._predict_apple(clahe_bgr)
         elif crop_type == "Cotton":
             result = self._predict_cotton(clahe_bgr, image_path)
-        elif crop_type in ("Hibiscus",):
+        elif crop_type == "Hibiscus":
             result = self._predict_hibiscus(clahe_bgr)
         else:
             # Generic LLM-assisted fallback for Tomato, Tea, Coffee, Maize, etc.

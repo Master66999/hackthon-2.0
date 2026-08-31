@@ -9,50 +9,242 @@ and infers regional soil profile & moisture holding capacity.
 import requests
 
 SOIL_DATABASE = {
-    # ── India ─────────────────────────────────────────────────────────────────
+    # ── Maharashtra & Western India ──────────────────────────────────────────
+    "pune": {
+        "type": "Black Basaltic Clay-Loam (Vertisol)",
+        "ph": 7.4,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.4%)",
+        "drainage": "Moderate to Slow"
+    },
     "nagpur": {
-        "type": "Black Cotton Soil (Vertisol Clay)",
+        "type": "Black Cotton Soil (Deep Vertisol Clay)",
         "ph": 7.8,
         "moisture_holding": "High",
         "organic_matter": "Medium (1.2%)",
-        "drainage": "Moderately Slow"
+        "drainage": "Slow"
     },
-    "assam": {
-        "type": "Alluvial Acidic Loam",
-        "ph": 5.4,
+    "mumbai": {
+        "type": "Coastal Alluvial & Saline Marshy Soil",
+        "ph": 7.1,
         "moisture_holding": "High",
-        "organic_matter": "High (2.4%)",
+        "organic_matter": "High (2.1%)",
+        "drainage": "Moderate"
+    },
+    "nashik": {
+        "type": "Reddish-Brown Basaltic Loam (Deccan Traps)",
+        "ph": 7.2,
+        "moisture_holding": "Moderate-High",
+        "organic_matter": "Medium (1.5%)",
+        "drainage": "Good"
+    },
+    "kolhapur": {
+        "type": "Fertile Deep Black Clay-Loam",
+        "ph": 7.5,
+        "moisture_holding": "Very High",
+        "organic_matter": "High (1.9%)",
+        "drainage": "Moderate"
+    },
+    "solapur": {
+        "type": "Shallow to Medium Black Soil (Regur)",
+        "ph": 7.9,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Low-Medium (0.9%)",
+        "drainage": "Slow"
+    },
+    "satara": {
+        "type": "Medium Black Basaltic & Lateritic Soil",
+        "ph": 7.0,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.6%)",
+        "drainage": "Moderate"
+    },
+    "aurangabad": {
+        "type": "Deep Black Regur Soil",
+        "ph": 7.7,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.1%)",
+        "drainage": "Slow"
+    },
+    "chhatrapati sambhajinagar": {
+        "type": "Deep Black Regur Soil",
+        "ph": 7.7,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.1%)",
+        "drainage": "Slow"
+    },
+    "maharashtra": {
+        "type": "Deep Black Regur & Basaltic Clay Soil",
+        "ph": 7.5,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.3%)",
+        "drainage": "Slow"
+    },
+    "gujarat": {
+        "type": "Medium Black Cotton & Coastal Alluvial Soil",
+        "ph": 7.6,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.2%)",
+        "drainage": "Moderate"
+    },
+    "ahmedabad": {
+        "type": "Goradu Sandy-Loam Soil",
+        "ph": 7.3,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Medium (1.0%)",
         "drainage": "Well Drained"
     },
-    "kerala": {
-        "type": "Laterite Tropical Red Soil",
-        "ph": 5.6,
-        "moisture_holding": "Moderate",
-        "organic_matter": "Medium (1.5%)",
-        "drainage": "Rapid"
-    },
+    # ── North & Central India ────────────────────────────────────────────────
     "punjab": {
-        "type": "Alluvial Sandy Loam",
+        "type": "Deep Alluvial Sandy-Loam (Inceptisol)",
         "ph": 7.2,
         "moisture_holding": "Moderate",
         "organic_matter": "Medium (1.1%)",
         "drainage": "Well Drained"
     },
-    "maharashtra": {
-        "type": "Deep Black Regur Soil",
-        "ph": 7.6,
+    "haryana": {
+        "type": "Indo-Gangetic Alluvial Soil",
+        "ph": 7.5,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Low-Medium (0.9%)",
+        "drainage": "Well Drained"
+    },
+    "delhi": {
+        "type": "Yamuna Alluvial Silt Loam",
+        "ph": 7.4,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Medium (1.2%)",
+        "drainage": "Moderate"
+    },
+    "uttar pradesh": {
+        "type": "Deep Gangetic Alluvial Silt-Clay",
+        "ph": 7.1,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.4%)",
+        "drainage": "Moderate"
+    },
+    "lucknow": {
+        "type": "Gangetic Alluvial Clay-Loam",
+        "ph": 7.2,
         "moisture_holding": "High",
         "organic_matter": "Medium (1.3%)",
+        "drainage": "Moderate"
+    },
+    "rajasthan": {
+        "type": "Arid Sandy & Desert Soil (Aridisol)",
+        "ph": 8.1,
+        "moisture_holding": "Low",
+        "organic_matter": "Low (0.4%)",
+        "drainage": "Rapid"
+    },
+    "jaipur": {
+        "type": "Semi-Arid Sandy Clay Loam",
+        "ph": 7.9,
+        "moisture_holding": "Low-Moderate",
+        "organic_matter": "Low (0.6%)",
+        "drainage": "Rapid"
+    },
+    "madhya pradesh": {
+        "type": "Mixed Red & Deep Black Soil",
+        "ph": 7.4,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.3%)",
+        "drainage": "Moderate"
+    },
+    "bhopal": {
+        "type": "Deep Black Clay-Loam",
+        "ph": 7.6,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.4%)",
         "drainage": "Slow"
     },
+    "indore": {
+        "type": "Malwa Plateau Black Cotton Soil",
+        "ph": 7.7,
+        "moisture_holding": "High",
+        "organic_matter": "Medium (1.5%)",
+        "drainage": "Slow"
+    },
+    # ── South India ──────────────────────────────────────────────────────────
+    "karnataka": {
+        "type": "Red Sandy-Loam (Alfisol) & Laterite Soil",
+        "ph": 6.3,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Medium (1.2%)",
+        "drainage": "Well Drained"
+    },
+    "bengaluru": {
+        "type": "Red Clay-Loam (Deccan Plateau Soil)",
+        "ph": 6.4,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Medium (1.4%)",
+        "drainage": "Well Drained"
+    },
+    "bangalore": {
+        "type": "Red Clay-Loam (Deccan Plateau Soil)",
+        "ph": 6.4,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Medium (1.4%)",
+        "drainage": "Well Drained"
+    },
+    "telangana": {
+        "type": "Red Chalka & Black Cotton Soil",
+        "ph": 6.8,
+        "moisture_holding": "Moderate-High",
+        "organic_matter": "Low-Medium (1.0%)",
+        "drainage": "Moderate"
+    },
+    "hyderabad": {
+        "type": "Red Sandy Soil (Chalka)",
+        "ph": 6.7,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Low (0.9%)",
+        "drainage": "Rapid"
+    },
     "tamil": {
-        "type": "Red Sandy Loam (Alfisol)",
+        "type": "Red Sandy Loam & Coastal Clay",
         "ph": 6.2,
         "moisture_holding": "Low-Moderate",
         "organic_matter": "Low (0.8%)",
         "drainage": "Rapid"
     },
-    # ── Africa ────────────────────────────────────────────────────────────────
+    "chennai": {
+        "type": "Coastal Alluvial Sand & Clay",
+        "ph": 6.9,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Low (0.9%)",
+        "drainage": "Moderate"
+    },
+    "kerala": {
+        "type": "Laterite Tropical Acidic Red Soil",
+        "ph": 5.6,
+        "moisture_holding": "Moderate",
+        "organic_matter": "Medium-High (1.8%)",
+        "drainage": "Rapid"
+    },
+    # ── East & North-East India ──────────────────────────────────────────────
+    "assam": {
+        "type": "Alluvial Acidic Tea Soil",
+        "ph": 5.2,
+        "moisture_holding": "High",
+        "organic_matter": "High (2.6%)",
+        "drainage": "Well Drained"
+    },
+    "west bengal": {
+        "type": "Gangetic Delta Alluvial Soil (Fluvisol)",
+        "ph": 6.5,
+        "moisture_holding": "Very High",
+        "organic_matter": "High (2.2%)",
+        "drainage": "Slow"
+    },
+    "kolkata": {
+        "type": "Deltaic Alluvial Clay",
+        "ph": 6.6,
+        "moisture_holding": "Very High",
+        "organic_matter": "High (2.3%)",
+        "drainage": "Slow"
+    },
+    # ── Global Agricultural Regions ──────────────────────────────────────────
     "ghana": {
         "type": "Forest Ochrosol (Tropical Ferruginous)",
         "ph": 6.0,
@@ -74,51 +266,20 @@ SOIL_DATABASE = {
         "organic_matter": "Medium (1.6%)",
         "drainage": "Slow"
     },
-    "nigeria": {
-        "type": "Savanna Sandy Loam (Alfisol)",
-        "ph": 6.4,
-        "moisture_holding": "Moderate",
-        "organic_matter": "Low-Medium (1.0%)",
-        "drainage": "Good"
-    },
-    # ── Americas ──────────────────────────────────────────────────────────────
     "brazil": {
-        "type": "Oxisol (Latosol) — Deep Tropical Weathered",
+        "type": "Oxisol (Latosol) — Deep Tropical",
         "ph": 5.3,
         "moisture_holding": "Moderate",
         "organic_matter": "Medium (1.8%)",
         "drainage": "Well Drained"
     },
-    "mexico": {
-        "type": "Phaeozem (Mollisol-like Dark Loam)",
-        "ph": 6.7,
-        "moisture_holding": "High",
-        "organic_matter": "High (2.5%)",
-        "drainage": "Moderate"
-    },
-    # ── Asia-Pacific ──────────────────────────────────────────────────────────
-    "indonesia": {
-        "type": "Volcanic Andosol (Highly Fertile)",
-        "ph": 5.7,
+    "usa": {
+        "type": "Mollisol (Prairie Black Fertile Soil)",
+        "ph": 6.8,
         "moisture_holding": "Very High",
-        "organic_matter": "Very High (4.2%)",
+        "organic_matter": "High (3.5%)",
         "drainage": "Moderate"
     },
-    "vietnam": {
-        "type": "Alluvial Delta Soil (Fluvisol)",
-        "ph": 5.8,
-        "moisture_holding": "Very High",
-        "organic_matter": "High (2.9%)",
-        "drainage": "Slow"
-    },
-    "china": {
-        "type": "Yellow-Brown Loam (Cambisol)",
-        "ph": 6.5,
-        "moisture_holding": "High",
-        "organic_matter": "Medium (1.7%)",
-        "drainage": "Moderate"
-    },
-    # ── Default Fallback ──────────────────────────────────────────────────────
     "default": {
         "type": "Rich Loamy Fertile Soil",
         "ph": 6.8,
@@ -129,28 +290,39 @@ SOIL_DATABASE = {
 }
 
 
-def fetch_weather_and_soil(city_or_lat="Nagpur", lon=None):
+def fetch_weather_and_soil(city_or_lat="Pune", lon=None):
     """
     Fetches real-time weather metrics using Open-Meteo API.
     Infers soil profile based on location query.
     """
-    lat, lng = 21.1458, 79.0882  # Default to Nagpur (cotton hub)
-    location_name = "Nagpur, Maharashtra"
+    lat, lng = 18.5204, 73.8567  # Default to Pune
+    location_name = "Pune, Maharashtra, India"
     
     # Check if city query or coords
     if isinstance(city_or_lat, str) and not lon:
-        try:
-            geo_res = requests.get(
-                "https://geocoding-api.open-meteo.com/v1/search",
-                params={"name": city_or_lat, "count": 1, "language": "en", "format": "json"},
-                timeout=4
-            )
-            if geo_res.status_code == 200 and "results" in geo_res.json():
-                res0 = geo_res.json()["results"][0]
-                lat, lng = res0["latitude"], res0["longitude"]
-                location_name = f"{res0.get('name')}, {res0.get('country', '')}"
-        except Exception as e:
-            print(f"Geocoding notice: {e}")
+        # Check if city_or_lat contains comma separated lat,lon
+        if "," in city_or_lat and any(char.isdigit() for char in city_or_lat):
+            try:
+                parts = [p.strip() for p in city_or_lat.split(",")]
+                lat, lng = float(parts[0]), float(parts[1])
+                location_name = f"{lat:.2f}°, {lng:.2f}°"
+            except Exception:
+                pass
+        
+        if location_name == "Pune, Maharashtra, India" or "," not in city_or_lat:
+            try:
+                geo_res = requests.get(
+                    "https://geocoding-api.open-meteo.com/v1/search",
+                    params={"name": city_or_lat, "count": 1, "language": "en", "format": "json"},
+                    timeout=4
+                )
+                if geo_res.status_code == 200 and "results" in geo_res.json():
+                    res0 = geo_res.json()["results"][0]
+                    lat, lng = res0["latitude"], res0["longitude"]
+                    parts = [res0.get("name"), res0.get("admin1"), res0.get("country")]
+                    location_name = ", ".join([p for p in parts if p])
+            except Exception as e:
+                print(f"Geocoding notice: {e}")
     elif isinstance(city_or_lat, (int, float)) and lon:
         lat, lng = float(city_or_lat), float(lon)
         location_name = f"{lat:.2f}°, {lng:.2f}°"
@@ -192,10 +364,10 @@ def fetch_weather_and_soil(city_or_lat="Nagpur", lon=None):
         print(f"Weather API notice: {e}")
 
     # Infer Soil Profile
-    key = location_name.lower()
+    search_key = f"{str(city_or_lat)} {location_name}".lower()
     matched_soil = SOIL_DATABASE["default"]
     for k in SOIL_DATABASE:
-        if k in key:
+        if k != "default" and k in search_key:
             matched_soil = SOIL_DATABASE[k]
             break
 

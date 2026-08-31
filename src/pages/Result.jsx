@@ -276,6 +276,37 @@ export default function Result() {
               </button>
             </motion.div>
 
+            {/* How & Why This Scan Helps AI for Climate Change */}
+            <motion.div
+              className="result__climate-box neo-raised-sm"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.52 }}
+              style={{
+                padding: '1.25rem',
+                marginTop: '1rem',
+                borderRadius: 'var(--radius-lg)',
+                background: 'linear-gradient(135deg, rgba(61, 107, 79, 0.08) 0%, rgba(196, 123, 90, 0.08) 100%)',
+                border: '1px solid rgba(61, 107, 79, 0.2)'
+              }}
+            >
+              <h4 style={{ fontSize: '0.9rem', color: 'var(--moss)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <Plant size={18} weight="fill" />
+                How & Why This Scan Helps AI for Climate Change
+              </h4>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.5rem', lineHeight: 1.45 }}>
+                <p style={{ margin: 0 }}>
+                  <strong>🌱 1. Early Pathology Containment:</strong> Diagnosing {disease.name} early prevents severe field devastation, reducing the need for high-emission chemical pesticide production & heavy Machinery spraying.
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong>🛰️ 2. Crowdsourced Pathogen Tracking:</strong> Your scan submits localized telemetry to AI weather models, training predictive radars to forecast heat & humidity-driven disease spread caused by climate change.
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong>⚡ 3. Nitrous Oxide (N₂O) Reduction:</strong> Following precision targeted remedies reduces synthetic nitrogen over-fertilization, preventing N₂O emissions which are 273x more potent greenhouse gases than CO₂.
+                </p>
+              </div>
+            </motion.div>
+
             {/* Description */}
             {disease.description && (
               <motion.div

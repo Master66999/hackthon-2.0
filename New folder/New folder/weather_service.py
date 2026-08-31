@@ -136,7 +136,7 @@ class WeatherSoilService:
     def get_weather_by_city(cls, city_name):
         """Geocode city and fetch live weather metrics."""
         if not city_name or city_name.strip() == "":
-            city_name = "Nagpur"
+            city_name = "Pune"
             
         city_name = city_name.strip()
 

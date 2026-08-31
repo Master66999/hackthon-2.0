@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
+import ChatWidget from './components/ChatWidget.jsx';
 import Landing from './pages/Landing.jsx';
 import Analyze from './pages/Analyze.jsx';
 import Result from './pages/Result.jsx';
@@ -128,6 +129,8 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </AnimatePresence>
+
+      <ChatWidget />
     </AuthProvider>
   );
 }

@@ -19,6 +19,8 @@ from vision_services.ai_service import generate_llm_expert_analysis, answer_agro
 from vision_services.pdf_generator import generate_diagnostic_pdf
 from vision_services.carbon_service import calculate_carbon_score
 from vision_services.weather_service import fetch_7day_forecast
+from vision_services.water_service import calculate_precision_water_advisory
+from vision_services.crop_recommender import recommend_climate_resilient_crops
 
 app = Flask(__name__)
 CORS(app)
@@ -53,7 +55,7 @@ def analyze_leaf_image():
 
         img_file = request.files['image']
         crop_override = request.form.get('crop', 'Auto-Detect')
-        location = request.form.get('location', 'Nagpur')
+        location = request.form.get('location', 'Pune')
         user_api_key = request.form.get('api_key') or request.headers.get('X-AI-API-Key')
         
         image_bytes = img_file.read()
@@ -83,7 +85,9 @@ def analyze_leaf_image():
         radar_info = calculate_outbreak_risk(
             engine_res["disease"],
             humidity=weather_info.get("humidity", 68),
-            temp=weather_info.get("temperature", 28.5)
+            temp=weather_info.get("temperature", 28.5),
+            wind_speed=weather_info.get("wind_speed", 12.4),
+            precip_risk=weather_info.get("precipitation_risk", 15)
         )
 
         # 6. LLM Multimodal Vision Analysis / Self-Correction
@@ -99,7 +103,26 @@ def analyze_leaf_image():
         # 7. Carbon Footprint Score
         carbon_info = calculate_carbon_score(
             ai_expert_res.get("chemical_controls", []),
-            ai_expert_res.get("organic_controls", [])
+            ai_expert_res.get("organic_controls", []),
+            crop=ai_expert_res.get("verified_crop", engine_res["crop"]),
+            disease=ai_expert_res.get("verified_disease", engine_res["disease"])
+        )
+
+        # 8. Precision Water & Irrigation Advisory
+        water_info = calculate_precision_water_advisory(
+            crop=ai_expert_res.get("verified_crop", engine_res["crop"]),
+            soil_type=soil_info.get("type", "Black Basaltic Clay"),
+            temp=weather_info.get("temperature", 28.5),
+            humidity=weather_info.get("humidity", 68),
+            wind_speed=weather_info.get("wind_speed", 12.4)
+        )
+
+        # 9. Climate-Resilient Crop Diversification
+        diversification_info = recommend_climate_resilient_crops(
+            current_crop=ai_expert_res.get("verified_crop", engine_res["crop"]),
+            temp=weather_info.get("temperature", 28.5),
+            humidity=weather_info.get("humidity", 68),
+            disease=ai_expert_res.get("verified_disease", engine_res["disease"])
         )
 
         # Combine payload
@@ -122,7 +145,9 @@ def analyze_leaf_image():
             "fertilizer": fertilizer_info,
             "organic": organic_info,
             "radar": radar_info,
-            "carbon": carbon_info
+            "carbon": carbon_info,
+            "water": water_info,
+            "diversification": diversification_info
         }
 
         return jsonify(final_payload)
@@ -152,7 +177,7 @@ def agronomic_chat():
 @app.route("/api/vision/weather", methods=["GET"])
 def get_weather():
     """Live climate endpoint."""
-    location = request.args.get("location", "Nagpur")
+    location = request.args.get("location", "Pune")
     data = fetch_weather_and_soil(location)
     return jsonify(data)
 
@@ -160,9 +185,9 @@ def get_weather():
 @app.route("/api/vision/forecast", methods=["GET"])
 def get_forecast():
     """7-Day disease risk forecast endpoint."""
-    location = request.args.get("location", "Nagpur")
+    location = request.args.get("location", "Pune")
     # Geocode the location to lat/lng first
-    lat, lng = 21.1458, 79.0882  # default Nagpur
+    lat, lng = 18.5204, 73.8567  # default Pune
     try:
         geo_res = requests.get(
             "https://geocoding-api.open-meteo.com/v1/search",
@@ -192,6 +217,40 @@ def generate_pdf_report():
         return send_file(pdf_path, as_attachment=True, download_name=f"LeafSense_Pathology_Report.pdf")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/vision/water", methods=["GET"])
+def get_water_advisory():
+    """GET endpoint for precision water footprint & drip irrigation advice."""
+    crop = request.args.get("crop", "Cotton")
+    location = request.args.get("location", "Pune")
+    weather_res = fetch_weather_and_soil(location)
+    weather_info = weather_res.get("weather", {}) if isinstance(weather_res, dict) else {}
+    soil_info = weather_res.get("soil", {}) if isinstance(weather_res, dict) else {}
+    soil_type_name = soil_info.get("type", "Black Basaltic Clay") if isinstance(soil_info, dict) else str(soil_info)
+    water_data = calculate_precision_water_advisory(
+        crop=crop,
+        soil_type=soil_type_name,
+        temp=weather_info.get("temperature", 28.5),
+        humidity=weather_info.get("humidity", 68),
+        wind_speed=weather_info.get("wind_speed", 12.4)
+    )
+    return jsonify(water_data)
+
+
+@app.route("/api/vision/crop-recommend", methods=["GET"])
+def get_crop_recommendation():
+    """GET endpoint for climate-resilient crop diversification recommendations."""
+    crop = request.args.get("crop", "Cotton")
+    location = request.args.get("location", "Pune")
+    weather_res = fetch_weather_and_soil(location)
+    weather_info = weather_res.get("weather", {}) if isinstance(weather_res, dict) else {}
+    crop_data = recommend_climate_resilient_crops(
+        current_crop=crop,
+        temp=weather_info.get("temperature", 28.5),
+        humidity=weather_info.get("humidity", 68)
+    )
+    return jsonify(crop_data)
 
 
 if __name__ == "__main__":
