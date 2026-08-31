@@ -241,6 +241,12 @@ img {
   padding: 0 var(--sp-6);
 }
 
+@media (max-width: 600px) {
+  .container {
+    padding: 0 1rem;
+  }
+}
+
 /* --- Scrollbar styling --- */
 ::-webkit-scrollbar {
   width: 6px;
@@ -270,6 +276,12 @@ img {
 /* --- Section spacing --- */
 .section {
   padding: var(--sp-20) 0;
+}
+
+@media (max-width: 600px) {
+  .section {
+    padding: var(--sp-12) 0;
+  }
 }
 
 /* --- Badge --- */

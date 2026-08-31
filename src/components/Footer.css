@@ -143,3 +143,14 @@
     text-align: center;
   }
 }
+
+@media (max-width: 480px) {
+  .footer {
+    padding-top: var(--sp-10);
+    margin-top: var(--sp-12);
+  }
+  .footer__links {
+    grid-template-columns: 1fr;
+    gap: var(--sp-6);
+  }
+}

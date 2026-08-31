@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Leaf, SignOut, User, CaretDown, Eye } from '@phosphor-icons/react';
+import { ArrowRight, Leaf, SignOut, User, CaretDown, Eye, List, X } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext.jsx';
 import './Navbar.css';
 
@@ -72,8 +72,14 @@ export default function Navbar() {
   const location          = useLocation();
   const navigate          = useNavigate();
   const { user, status, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isLogin = location.pathname === '/login';
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   if (isLogin) return null;
 
   const handleLogout = async () => {
@@ -94,7 +100,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Nav links */}
+        {/* Nav links (Desktop) */}
         <nav className="navbar__nav" aria-label="Main navigation">
           <Link
             to="/"
@@ -134,8 +140,102 @@ export default function Navbar() {
           ) : (
             <div className="navbar__skeleton" aria-hidden="true" />
           )}
+
+          {/* Mobile hamburger toggle */}
+          <button
+            className="navbar__toggle"
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label="Toggle mobile menu"
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X size={22} weight="bold" /> : <List size={22} weight="bold" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu Drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="navbar__mobile-drawer"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22, ease: [0.33, 1, 0.68, 1] }}
+          >
+            <div className="navbar__mobile-content container">
+              <nav className="navbar__mobile-nav">
+                <Link
+                  to="/"
+                  className={`navbar__mobile-link ${location.pathname === '/' ? 'navbar__mobile-link--active' : ''}`}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/analyze"
+                  className={`navbar__mobile-link ${location.pathname === '/analyze' ? 'navbar__mobile-link--active' : ''}`}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Analyze
+                </Link>
+                <Link
+                  to="/console"
+                  className={`navbar__mobile-link ${location.pathname === '/console' ? 'navbar__mobile-link--active' : ''}`}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Vision Console
+                </Link>
+                <a
+                  href="/#crops"
+                  className="navbar__mobile-link"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Crops
+                </a>
+              </nav>
+
+              <div className="navbar__mobile-footer">
+                {status === 'authenticated' && user ? (
+                  <div className="navbar__mobile-user">
+                    <div className="navbar__mobile-user-info">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt={user.name} className="nav-user__avatar" referrerPolicy="no-referrer" />
+                      ) : (
+                        <span className="nav-user__avatar-fallback">
+                          <User size={16} weight="bold" />
+                        </span>
+                      )}
+                      <div className="navbar__mobile-user-meta">
+                        <span className="nav-user__info-name">{user.name}</span>
+                        <span className="nav-user__info-email">{user.email}</span>
+                      </div>
+                    </div>
+                    <button
+                      className="btn btn-secondary navbar__mobile-logout"
+                      onClick={() => { setMobileOpen(false); handleLogout(); }}
+                    >
+                      <SignOut size={16} weight="bold" />
+                      Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="navbar__mobile-cta-group">
+                    <Link to="/login" className="btn btn-secondary navbar__mobile-btn" onClick={() => setMobileOpen(false)}>
+                      Sign in
+                    </Link>
+                    <Link to="/console" className="btn btn-primary navbar__mobile-btn" onClick={() => setMobileOpen(false)}>
+                      Vision AI
+                      <ArrowRight size={16} weight="bold" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
+

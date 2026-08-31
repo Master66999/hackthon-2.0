@@ -548,7 +548,80 @@
 }
 
 @media (max-width: 600px) {
+  .landing {
+    padding-top: 60px;
+  }
+
+  .hero {
+    padding: 3.5rem 1rem 2rem;
+    gap: 1.75rem;
+  }
+
+  .hero__title {
+    font-size: clamp(2rem, 7.5vw, 3rem);
+  }
+
+  .hero__subtitle {
+    font-size: 0.95rem;
+  }
+
+  .hero__actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero__actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .hero__stat {
+    padding: 0.75rem 0.5rem;
+    width: 100%;
+  }
+
+  .hero__stat-num {
+    font-size: 1.5rem;
+  }
+
+  .hero__accent-card {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin-top: 0.75rem;
+    width: fit-content;
+    align-self: center;
+  }
+
+  .crop-carousel-wrap {
+    padding-left: 1rem;
+  }
+
   .crop-carousel__slide {
-    width: 240px;
+    width: 230px;
+  }
+
+  .testimonials-carousel-wrap {
+    padding: 0 1rem;
+  }
+
+  .testimonial-card {
+    padding: 1.25rem;
+  }
+
+  .cta-banner {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .cta-banner__btn {
+    width: 100%;
+    justify-content: center;
   }
 }

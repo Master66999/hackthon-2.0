@@ -291,11 +291,33 @@
   }
 }
 
+@media (max-width: 600px) {
+  .result {
+    padding-top: 80px;
+  }
+  .result__alt-row {
+    grid-template-columns: 1fr 55px auto;
+    gap: 0.4rem;
+  }
+  .result__alt-name {
+    font-size: 0.78rem;
+  }
+  .result__alt-bar-wrap {
+    width: 55px;
+  }
+}
+
 @media (max-width: 480px) {
+  .result__disease-header {
+    gap: 0.5rem;
+  }
   .result__actions {
     flex-direction: column;
   }
   .result__actions .btn { width: 100%; justify-content: center; }
+  .treatment-card {
+    padding: 0.85rem 1rem;
+  }
 }
 
 /* ─── Telemetry & TTS Upgrades ──────── */

@@ -260,18 +260,47 @@
   }
 }
 
+@media (max-width: 600px) {
+  .analyze {
+    padding-top: 80px;
+  }
+  .upload-zone__prompt {
+    padding: 1.75rem 1rem;
+  }
+  .upload-preview {
+    height: 260px;
+  }
+  .analyze__loading-card {
+    padding: 2rem 1.25rem;
+    max-width: calc(100vw - 2rem);
+  }
+}
+
 @media (max-width: 520px) {
   .crop-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
   .analyze__submit-row { justify-content: center; }
   .analyze__submit-btn { width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .crop-grid {
+    gap: 0.5rem;
+  }
 }
 
 /* ─── Camera Scanner ────────────────── */
 .upload-zone--camera-active {
   cursor: default;
   height: 380px;
+}
+
+@media (max-width: 600px) {
+  .upload-zone--camera-active {
+    height: 300px;
+  }
 }
 
 .camera-scanner {

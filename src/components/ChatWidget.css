@@ -308,3 +308,20 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .cw-wrapper {
+    bottom: 16px;
+    right: 16px;
+  }
+  .cw-card {
+    position: fixed;
+    bottom: 72px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    height: clamp(380px, 72vh, 520px);
+    border-radius: var(--radius-lg);
+  }
+}

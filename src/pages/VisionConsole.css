@@ -890,7 +890,62 @@
 }
 
 @media (max-width: 600px) {
+  .vision-console {
+    padding-top: 80px;
+  }
+  .vc-card {
+    padding: 1.25rem 1rem;
+  }
+  .vc-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .vc-header__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .vc-controls-row {
+    grid-template-columns: 1fr;
+  }
+  .vc-vitals-grid {
+    grid-template-columns: 1fr;
+  }
+  .vc-radar-breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+  .vc-gauges-row {
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
   .vc-carbon-row { grid-template-columns: 90px 1fr 80px; }
   .vc-forecast-chart { gap: 0.3rem; }
   .vc-forecast-risk-label { font-size: 0.6rem; }
+}
+
+@media (max-width: 480px) {
+  .vc-carbon-row {
+    grid-template-columns: 80px 1fr 70px;
+    gap: 0.35rem;
+  }
+  .vc-carbon-label {
+    font-size: 0.72rem;
+  }
+  .vc-carbon-val {
+    font-size: 0.7rem;
+  }
+  .vc-forecast-chart {
+    gap: 0.15rem;
+  }
+  .vc-forecast-day {
+    font-size: 0.62rem;
+  }
+  .vc-forecast-temp, .vc-forecast-hum {
+    font-size: 0.58rem;
+  }
+  .vc-forecast-legend {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
 }
