@@ -255,5 +255,6 @@ def get_crop_recommendation():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5001))
-    print(f"\n[LeafSense] Plant AI Vision & Soil Intelligence Console running on http://localhost:{port}")
-    app.run(host="0.0.0.0", port=port, debug=True)
+    is_prod = os.environ.get("RENDER") is not None or os.environ.get("NODE_ENV") == "production"
+    print(f"\n[LeafSense] Plant AI Vision & Soil Intelligence Console running on port {port}")
+    app.run(host="0.0.0.0", port=port, debug=not is_prod)
