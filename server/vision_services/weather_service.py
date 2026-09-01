@@ -6,9 +6,11 @@ for live weather stats (temperature, humidity, wind speed, precipitation risk)
 and infers regional soil profile & moisture holding capacity.
 """
 
+import os
 import requests
 
 SOIL_DATABASE = {
+
     # ── Maharashtra & Western India ──────────────────────────────────────────
     "pune": {
         "type": "Black Basaltic Clay-Loam (Vertisol)",
@@ -292,76 +294,123 @@ SOIL_DATABASE = {
 
 def fetch_weather_and_soil(city_or_lat="Pune", lon=None):
     """
-    Fetches real-time weather metrics using Open-Meteo API.
+    Fetches real-time weather metrics using OpenWeatherMap API (or Open-Meteo API fallback).
     Infers soil profile based on location query.
     """
+    owm_key = os.environ.get("OPENWEATHER_API_KEY") or "c75b7dcde709880b26ea385d18dcefcc"
     lat, lng = 18.5204, 73.8567  # Default to Pune
     location_name = "Pune, Maharashtra, India"
-    
-    # Check if city query or coords
-    if isinstance(city_or_lat, str) and not lon:
-        # Check if city_or_lat contains comma separated lat,lon
-        if "," in city_or_lat and any(char.isdigit() for char in city_or_lat):
-            try:
-                parts = [p.strip() for p in city_or_lat.split(",")]
-                lat, lng = float(parts[0]), float(parts[1])
-                location_name = f"{lat:.2f}°, {lng:.2f}°"
-            except Exception:
-                pass
-        
-        if location_name == "Pune, Maharashtra, India" or "," not in city_or_lat:
-            try:
-                geo_res = requests.get(
-                    "https://geocoding-api.open-meteo.com/v1/search",
-                    params={"name": city_or_lat, "count": 1, "language": "en", "format": "json"},
-                    timeout=4
-                )
-                if geo_res.status_code == 200 and "results" in geo_res.json():
-                    res0 = geo_res.json()["results"][0]
-                    lat, lng = res0["latitude"], res0["longitude"]
-                    parts = [res0.get("name"), res0.get("admin1"), res0.get("country")]
-                    location_name = ", ".join([p for p in parts if p])
-            except Exception as e:
-                print(f"Geocoding notice: {e}")
-    elif isinstance(city_or_lat, (int, float)) and lon:
-        lat, lng = float(city_or_lat), float(lon)
-        location_name = f"{lat:.2f}°, {lng:.2f}°"
+    weather_data_fetched = False
 
-    # Query Open-Meteo Weather API
-    weather_data = {
-        "temperature": 28.5,
-        "humidity": 68,
-        "wind_speed": 12.4,
-        "precipitation_risk": 15,
-        "uv_index": 6.2,
-        "location": location_name,
-        "coords": [lat, lng]
-    }
-    
-    try:
-        w_res = requests.get(
-            "https://api.open-meteo.com/v1/forecast",
-            params={
-                "latitude": lat,
-                "longitude": lng,
-                "current_weather": "true",
-                "hourly": "relativehumidity_2m,precipitation_probability"
-            },
-            timeout=4
-        )
-        if w_res.status_code == 200:
-            json_data = w_res.json()
-            curr = json_data.get("current_weather", {})
-            weather_data["temperature"] = curr.get("temperature", 28.5)
-            weather_data["wind_speed"] = curr.get("windspeed", 12.4)
+    # 1. Try OpenWeatherMap API first if city or coords provided
+    if owm_key:
+        try:
+            owm_params = {"appid": owm_key, "units": "metric"}
+            if isinstance(city_or_lat, (int, float)) and lon:
+                owm_params["lat"] = city_or_lat
+                owm_params["lon"] = lon
+            elif isinstance(city_or_lat, str) and "," in city_or_lat and any(c.isdigit() for c in city_or_lat):
+                parts = [p.strip() for p in city_or_lat.split(",")]
+                owm_params["lat"] = float(parts[0])
+                owm_params["lon"] = float(parts[1])
+            else:
+                owm_params["q"] = str(city_or_lat)
+
+            owm_res = requests.get("https://api.openweathermap.org/data/2.5/weather", params=owm_params, timeout=4)
+            if owm_res.status_code == 200:
+                owm_json = owm_res.json()
+                main_data = owm_json.get("main", {})
+                wind_data = owm_json.get("wind", {})
+                clouds_data = owm_json.get("clouds", {})
+                coord_data = owm_json.get("coord", {})
+
+                lat = coord_data.get("lat", lat)
+                lng = coord_data.get("lon", lng)
+                sys_data = owm_json.get("sys", {})
+                country = sys_data.get("country", "")
+                c_name = owm_json.get("name", str(city_or_lat))
+                location_name = f"{c_name}, {country}".strip(", ")
+
+                weather_data = {
+                    "temperature": round(main_data.get("temp", 28.5), 1),
+                    "humidity": main_data.get("humidity", 68),
+                    "wind_speed": round(wind_data.get("speed", 3.4) * 3.6, 1), # m/s to km/h
+                    "precipitation_risk": clouds_data.get("all", 15),
+                    "uv_index": 6.2,
+                    "location": location_name,
+                    "coords": [lat, lng],
+                    "source": "OpenWeatherMap API"
+                }
+                weather_data_fetched = True
+        except Exception as e:
+            print(f"[weather_service] OpenWeatherMap notice: {e}")
+
+    if not weather_data_fetched:
+        # Fallback to Open-Meteo API
+        # Check if city query or coords
+        if isinstance(city_or_lat, str) and not lon:
+            if "," in city_or_lat and any(char.isdigit() for char in city_or_lat):
+                try:
+                    parts = [p.strip() for p in city_or_lat.split(",")]
+                    lat, lng = float(parts[0]), float(parts[1])
+                    location_name = f"{lat:.2f}°, {lng:.2f}°"
+                except Exception:
+                    pass
             
-            hourly = json_data.get("hourly", {})
-            if "relativehumidity_2m" in hourly and hourly["relativehumidity_2m"]:
-                weather_data["humidity"] = hourly["relativehumidity_2m"][0]
-            if "precipitation_probability" in hourly and hourly["precipitation_probability"]:
-                weather_data["precipitation_risk"] = hourly["precipitation_probability"][0]
-    except Exception as e:
-        print(f"Weather API notice: {e}")
+            if location_name == "Pune, Maharashtra, India" or "," not in city_or_lat:
+                try:
+                    geo_res = requests.get(
+                        "https://geocoding-api.open-meteo.com/v1/search",
+                        params={"name": city_or_lat, "count": 1, "language": "en", "format": "json"},
+                        timeout=4
+                    )
+                    if geo_res.status_code == 200 and "results" in geo_res.json():
+                        res0 = geo_res.json()["results"][0]
+                        lat, lng = res0["latitude"], res0["longitude"]
+                        parts = [res0.get("name"), res0.get("admin1"), res0.get("country")]
+                        location_name = ", ".join([p for p in parts if p])
+                except Exception as e:
+                    print(f"Geocoding notice: {e}")
+        elif isinstance(city_or_lat, (int, float)) and lon:
+            lat, lng = float(city_or_lat), float(lon)
+            location_name = f"{lat:.2f}°, {lng:.2f}°"
+
+        weather_data = {
+            "temperature": 28.5,
+            "humidity": 68,
+            "wind_speed": 12.4,
+            "precipitation_risk": 15,
+            "uv_index": 6.2,
+            "location": location_name,
+            "coords": [lat, lng],
+            "source": "Open-Meteo API"
+        }
+        
+        try:
+            w_res = requests.get(
+                "https://api.open-meteo.com/v1/forecast",
+                params={
+                    "latitude": lat,
+                    "longitude": lng,
+                    "current_weather": "true",
+                    "hourly": "relativehumidity_2m,precipitation_probability"
+                },
+                timeout=4
+            )
+            if w_res.status_code == 200:
+                json_data = w_res.json()
+                curr = json_data.get("current_weather", {})
+                weather_data["temperature"] = curr.get("temperature", 28.5)
+                weather_data["wind_speed"] = curr.get("windspeed", 12.4)
+                
+                hourly = json_data.get("hourly", {})
+                if "relativehumidity_2m" in hourly and hourly["relativehumidity_2m"]:
+                    weather_data["humidity"] = hourly["relativehumidity_2m"][0]
+                if "precipitation_probability" in hourly and hourly["precipitation_probability"]:
+                    weather_data["precipitation_risk"] = hourly["precipitation_probability"][0]
+        except Exception as e:
+            print(f"Weather API notice: {e}")
+
 
     # Infer Soil Profile
     search_key = f"{str(city_or_lat)} {location_name}".lower()

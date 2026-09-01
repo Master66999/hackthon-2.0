@@ -8,10 +8,10 @@ import { getVisionApiUrl } from '../utils/apiConfig.js';
 import './ChatWidget.css';
 
 const PRESET_QUESTIONS = [
-  '🌿 How do I treat leaf rust organically?',
-  '🧪 What N-P-K fertilizer ratio is best for cotton?',
-  '💧 How much watering is needed for black soil?',
-  '☀️ How does heat wave affect fungal disease risk?'
+  '🌍 How does climate heat affect fungal disease risk?',
+  '🌿 How do I treat leaf rust with organic remedies?',
+  '💧 What precision drip irrigation saves water in heatwaves?',
+  '🌱 How can bio-compost lower farm carbon emissions?'
 ];
 
 export default function ChatWidget() {
@@ -24,9 +24,10 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState([
     {
       sender: 'ai',
-      text: 'Hello! I am your LeafSense AI Agronomist. Ask me anything about crop diseases, soil nutrients, organic treatments, or climate impacts!'
+      text: 'Hello! I am your LeafSense Climate & Agronomic AI Specialist powered by OpenAI. Ask me anything about crop disease treatment, heat stress mitigation, soil nutrients, or carbon-smart farming!'
     }
   ]);
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

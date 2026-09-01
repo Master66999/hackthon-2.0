@@ -10,6 +10,14 @@ import requests
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
+try:
+    from dotenv import load_dotenv
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    load_dotenv(dotenv_path=env_path)
+except Exception as e:
+    print(f"[LeafSense] Dotenv loading notice: {e}")
+
+
 from vision_services.model_engine import get_model_engine
 from vision_services.weather_service import fetch_weather_and_soil
 from vision_services.fertilizer_service import calculate_fertilizer_npk
