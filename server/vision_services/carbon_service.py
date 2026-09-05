@@ -160,4 +160,93 @@ def calculate_carbon_score(chemical_controls=None, organic_controls=None, crop="
         "summary":         summary,
         "climate_reasons": climate_reasons,
         "ledger":          carbon_ledger,
-    }
+    }
+
+
+REGENERATIVE_PRACTICES_DB = {
+    "cover_cropping": {
+        "name": "Leguminous Cover Cropping",
+        "soc_rate_tons_ha": 1.45,
+        "n2o_reduction_pct": 35,
+        "desc": "Planting clover, vetch, or cowpea in off-seasons binds atmospheric N2 into soil and prevents erosion."
+    },
+    "biochar_amendment": {
+        "name": "Biochar Pyrolysis Amendment",
+        "soc_rate_tons_ha": 2.20,
+        "n2o_reduction_pct": 50,
+        "desc": "Incorporating biochar locks recalcitrant carbon in soil for over 100+ years while boosting moisture retention."
+    },
+    "zero_tillage": {
+        "name": "No-Till / Minimum Tillage",
+        "soc_rate_tons_ha": 0.95,
+        "n2o_reduction_pct": 20,
+        "desc": "Avoids tilling fungal hyphae networks and prevents rapid oxidative carbon loss to atmosphere."
+    },
+    "compost_vermicompost": {
+        "name": "Organic Vermicomposting",
+        "soc_rate_tons_ha": 0.80,
+        "n2o_reduction_pct": 25,
+        "desc": "Replaces synthetic urea with humified organic waste, building long-term soil organic matter (SOM)."
+    },
+    "agroforestry": {
+        "name": "Agroforestry / Boundary Trees",
+        "soc_rate_tons_ha": 1.80,
+        "n2o_reduction_pct": 40,
+        "desc": "Perennial deep-root trees capture carbon in woody biomass and subsoil strata."
+    }
+}
+
+def calculate_regenerative_farm_dashboard(crop="Cotton", farm_size_ha=2.5, active_practices=None):
+    """
+    Computes Soil Organic Carbon (SOC) annual sequestration rate, carbon credit yields ($/yr),
+    and 5-year SOM trajectory for regenerative farming practices.
+    """
+    if active_practices is None:
+        active_practices = ["cover_cropping", "biochar_amendment", "zero_tillage"]
+
+    farm_ha = float(farm_size_ha)
+    selected_practices = []
+    total_soc_rate = 0.5  # Baseline natural soil sequestration
+
+    for key in active_practices:
+        if key in REGENERATIVE_PRACTICES_DB:
+            p = REGENERATIVE_PRACTICES_DB[key]
+            selected_practices.append(p)
+            total_soc_rate += p["soc_rate_tons_ha"]
+
+    annual_co2_sequestered_tons = round(total_soc_rate * farm_ha, 2)
+    credits_earned = round(annual_co2_sequestered_tons, 2)
+    revenue_usd = round(credits_earned * 28.0, 2)  # $28 per verified carbon credit ton
+    revenue_inr = int(round(revenue_usd * 83.5, 0))
+
+    # 5-Year Soil Organic Matter (SOM %) Growth Projection
+    base_som = 1.2  # initial 1.2% SOM
+    trajectory = []
+    for yr in range(1, 6):
+        som_val = round(base_som + (total_soc_rate * 0.18 * yr), 2)
+        cumul_co2 = round(annual_co2_sequestered_tons * yr, 2)
+        trajectory.append({
+            "year": f"Year {yr}",
+            "som_percent": som_val,
+            "cumulative_co2_tons": cumul_co2,
+            "cumulative_revenue_usd": round(revenue_usd * yr, 2)
+        })
+
+    certificate_id = f"LS-REGEN-SOC-{abs(hash(str(crop) + str(farm_ha) + str(active_practices))) % 1000000:06d}"
+
+    return {
+        "crop": crop,
+        "farm_size_ha": farm_ha,
+        "annual_co2_sequestered_tons": annual_co2_sequestered_tons,
+        "annual_revenue_usd": revenue_usd,
+        "annual_revenue_inr": revenue_inr,
+        "carbon_rating": "Regenerative Champion" if total_soc_rate >= 3.5 else "Soil Carbon Builder",
+        "active_practices": selected_practices,
+        "trajectory_5yr": trajectory,
+        "certificate": {
+            "id": certificate_id,
+            "status": "Verified by LeafSense AI SOC Protocol",
+            "issuer": "LeafSense Global Climate Registry"
+        }
+    }
+

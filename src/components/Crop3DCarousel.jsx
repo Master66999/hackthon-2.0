@@ -1,22 +1,16 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, ArrowsLeftRight } from '@phosphor-icons/react';
 import { CROPS } from '../data/crops.js';
 import './Crop3DCarousel.css';
 
 /*
-  3D fan carousel — 5 cards visible at once.
-  Centre card faces viewer; side cards rotate on Y-axis
-  with perspective to create the Diamond-Gallery style depth effect.
-
-  Slot positions (relative offset from active card):
-    -2 → far-left   · rotateY(+52deg) · dimmed heavily
-    -1 → left       · rotateY(+36deg) · dimmed slightly
-     0 → center     · rotateY(0)      · full opacity + CTA
-    +1 → right      · rotateY(-36deg) · dimmed slightly
-    +2 → far-right  · rotateY(-52deg) · dimmed heavily
+  Reconstructed 3D Fan & Mobile Touch Carousel.
+  Dynamically adapts perspective offsets for mobile screens (< 768px)
+  to ensure full card readability, touch responsiveness, and zero overflow.
 */
-const SLOTS = [
+
+const DESKTOP_SLOTS = [
   { offset: -2, x: -520, ry:  52, scale: 0.60, op: 0.28, zi: 1 },
   { offset: -1, x: -278, ry:  36, scale: 0.80, op: 0.65, zi: 2 },
   { offset:  0, x:    0, ry:   0, scale: 1.00, op: 1.00, zi: 5 },
@@ -24,27 +18,52 @@ const SLOTS = [
   { offset:  2, x:  520, ry: -52, scale: 0.60, op: 0.28, zi: 1 },
 ];
 
-function getSlot(offset) {
-  return SLOTS.find((s) => s.offset === offset) ?? null;
-}
+const MOBILE_SLOTS = [
+  { offset: -2, x: -240, ry:  30, scale: 0.50, op: 0.00, zi: 1 },
+  { offset: -1, x: -145, ry:  20, scale: 0.84, op: 0.48, zi: 2 },
+  { offset:  0, x:    0, ry:   0, scale: 1.00, op: 1.00, zi: 5 },
+  { offset:  1, x:  145, ry: -20, scale: 0.84, op: 0.48, zi: 2 },
+  { offset:  2, x:  240, ry: -30, scale: 0.50, op: 0.00, zi: 1 },
+];
 
 export default function Crop3DCarousel() {
   const [activeIdx, setActiveIdx] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
   const N = CROPS.length; // 6
+
+  // Track window resize for responsive slot positioning
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const go = useCallback(
     (dir) => setActiveIdx((i) => (i + dir + N) % N),
     [N]
   );
 
-  /* Touch / swipe */
-  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
-  const onTouchEnd   = (e) => {
-    if (touchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(dx) > 48) go(dx < 0 ? 1 : -1);
+  /* Touch & swipe navigation */
+  const onTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const onTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const dx = touchEndX.current - touchStartX.current;
+    if (Math.abs(dx) > 35) {
+      go(dx < 0 ? 1 : -1);
+    }
     touchStartX.current = null;
+    touchEndX.current = null;
   };
 
   /* Keyboard navigation */
@@ -53,10 +72,13 @@ export default function Crop3DCarousel() {
     if (e.key === 'ArrowRight') go(1);
   };
 
+  const currentSlots = isMobile ? MOBILE_SLOTS : DESKTOP_SLOTS;
+
   return (
     <div
       className="c3d"
       onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       onKeyDown={onKeyDown}
       tabIndex={0}
@@ -65,17 +87,16 @@ export default function Crop3DCarousel() {
     >
       {/* ── 3-D Stage ── */}
       <div className="c3d__stage">
-        {/* Ambient glow ring on the "floor" */}
+        {/* Ambient glow floor ring */}
         <div className="c3d__ring" />
 
         {CROPS.map((crop, idx) => {
-          /* Compute normalized offset */
           let offset = idx - activeIdx;
           if (offset >  N / 2) offset -= N;
           if (offset < -N / 2) offset += N;
 
-          const slot    = getSlot(offset);
-          if (!slot) return null;           // hide cards beyond ±2
+          const slot = currentSlots.find((s) => s.offset === offset);
+          if (!slot) return null;
 
           const isActive = offset === 0;
 
@@ -104,25 +125,24 @@ export default function Crop3DCarousel() {
                     className="c3d__img"
                     loading="lazy"
                   />
-                  {/* Colour-matched gradient from crop accent */}
                   <div
                     className="c3d__img-gradient"
                     style={{
-                      background: `linear-gradient(to top, ${crop.accent}d9 0%, ${crop.accent}55 42%, transparent 72%)`,
+                      background: `linear-gradient(to top, ${crop.accent}e6 0%, ${crop.accent}66 45%, transparent 75%)`,
                     }}
                   />
-                  {/* Holographic foil sheen — visible on hover */}
                   <div className="c3d__foil" />
                 </div>
 
                 {/* Content */}
                 <div className="c3d__content">
-                  <p className="c3d__latin">{crop.latin}</p>
+                  <span className="c3d__latin">{crop.latin}</span>
                   <h3 className="c3d__name">{crop.name}</h3>
                   <p className="c3d__count">
                     {crop.diseases.filter((d) => d.id !== 'healthy').length}&nbsp;diseases tracked
                   </p>
-                  {/* CTA slides in only for the active card */}
+                  
+                  {/* CTA button (visible always on active card) */}
                   <div className={`c3d__cta${isActive ? ' c3d__cta--show' : ''}`}>
                     <Link
                       to="/analyze"
@@ -132,18 +152,25 @@ export default function Crop3DCarousel() {
                       tabIndex={isActive ? 0 : -1}
                     >
                       Analyze {crop.name}
-                      <ArrowRight size={14} />
+                      <ArrowRight size={14} weight="bold" />
                     </Link>
                   </div>
                 </div>
               </div>
 
-              {/* Per-card ground shadow */}
               {isActive && <div className="c3d__card-shadow" />}
             </div>
           );
         })}
       </div>
+
+      {/* ── Mobile Swipe Hint ── */}
+      {isMobile && (
+        <div className="c3d__mobile-swipe-hint">
+          <ArrowsLeftRight size={16} weight="bold" className="c3d__swipe-icon" />
+          <span>Swipe cards left or right</span>
+        </div>
+      )}
 
       {/* ── Controls ── */}
       <div className="c3d__controls">
@@ -156,7 +183,7 @@ export default function Crop3DCarousel() {
           <ArrowLeft size={18} weight="bold" />
         </button>
 
-        {/* Pill-dots */}
+        {/* Pill dots */}
         <div className="c3d__dots" role="tablist" aria-label="Select crop">
           {CROPS.map((crop, i) => (
             <button

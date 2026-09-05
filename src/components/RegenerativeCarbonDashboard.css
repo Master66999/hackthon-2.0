@@ -1,0 +1,369 @@
+/* ══════════════════════════════════════════
+   AI Regenerative Carbon Dashboard CSS
+══════════════════════════════════════════ */
+
+.carbon-dashboard {
+  width: 100%;
+  padding: 1.75rem 2rem;
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  background: var(--surface-raised);
+  margin-top: 1.5rem;
+}
+
+.carbon-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.carbon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--moss);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(61, 107, 79, 0.12);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 0.4rem;
+}
+
+.carbon-title {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.carbon-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.carbon-inputs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.input-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.input-lbl {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.input-ctrl {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: var(--surface);
+  color: var(--text-primary);
+  outline: none;
+  font-family: var(--font-body);
+}
+
+/* Practice Selectors */
+.practices-selector-card {
+  padding: 1.15rem 1.35rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.selector-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.practices-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.practice-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(61, 107, 79, 0.2);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.practice-pill.active {
+  background: var(--moss);
+  color: #fff;
+  border-color: var(--moss);
+  box-shadow: 0 4px 12px rgba(61, 107, 79, 0.25);
+}
+
+.pill-rate {
+  font-size: 0.7rem;
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+/* Loading */
+.carbon-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.carbon-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--moss-pale);
+  border-top-color: var(--moss);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Body */
+.carbon-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.kpi-card {
+  padding: 1.25rem 1.4rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  position: relative;
+}
+
+.kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-card.primary .kpi-icon {
+  background: rgba(61, 107, 79, 0.15);
+  color: var(--moss);
+}
+
+.kpi-card.success .kpi-icon {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.kpi-card.cert .kpi-icon {
+  background: rgba(196, 123, 90, 0.15);
+  color: var(--clay);
+}
+
+.kpi-data {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.kpi-val {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.kpi-val small {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.kpi-subval {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #22c55e;
+}
+
+.kpi-lbl {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.kpi-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(61, 107, 79, 0.12);
+  color: var(--moss);
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.kpi-cert-id {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--clay);
+}
+
+.kpi-subtext {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* 2 Column Grid */
+.carbon-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.practice-details-card,
+.trajectory-card {
+  padding: 1.35rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.practices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.practice-item {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.practice-item-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.practice-item-name {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.practice-item-rate {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--moss);
+}
+
+.practice-item-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.n2o-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #22c55e;
+}
+
+/* Trajectory List */
+.trajectory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.trajectory-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.yr-lbl {
+  width: 50px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.som-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--moss-pale);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.som-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--moss), #22c55e);
+  transition: width 0.5s ease;
+}
+
+.som-val {
+  font-weight: 700;
+  color: var(--moss);
+  width: 70px;
+}
+
+.revenue-val {
+  font-weight: 600;
+  color: var(--clay);
+  width: 75px;
+  text-align: right;
+}
+
+.trajectory-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: rgba(61, 107, 79, 0.08);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+}

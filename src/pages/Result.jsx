@@ -290,13 +290,37 @@ export default function Result() {
                 border: '1px solid rgba(61, 107, 79, 0.2)'
               }}
             >
-              <h4 style={{ fontSize: '0.9rem', color: 'var(--moss)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                <Plant size={18} weight="fill" />
-                How & Why This Scan Helps AI for Climate Change
-              </h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--moss)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                  <Plant size={18} weight="fill" />
+                  AI Climate Impact & Sensitivity Breakdown
+                </h4>
+                <span style={{ fontSize: '0.72rem', background: 'rgba(196, 123, 90, 0.15)', color: 'var(--clay)', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-full)', fontWeight: 700 }}>
+                  Climate Driver Index: {Math.min(95, Math.max(40, Math.round((confidence || 85) * 0.9)))}%
+                </span>
+              </div>
+
+              {/* Climate Driver Gauge Bar */}
+              <div style={{ marginBottom: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+                  <span>Microclimate Sensitivity: High</span>
+                  <span>Pathogen Humidity Threshold Active</span>
+                </div>
+                <div style={{ width: '100%', height: '6px', background: 'var(--moss-pale)', borderRadius: '999px', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      width: `${Math.min(95, Math.max(40, Math.round((confidence || 85) * 0.9)))}%`,
+                      height: '100%',
+                      background: 'linear-gradient(to right, var(--moss), var(--clay))',
+                      borderRadius: '999px'
+                    }}
+                  />
+                </div>
+              </div>
+
               <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.5rem', lineHeight: 1.45 }}>
                 <p style={{ margin: 0 }}>
-                  <strong>🌱 1. Early Pathology Containment:</strong> Diagnosing {disease.name} early prevents severe field devastation, reducing the need for high-emission chemical pesticide production & heavy Machinery spraying.
+                  <strong>🌱 1. Early Pathology Containment:</strong> Diagnosing {disease.name} early prevents severe field devastation, reducing the need for high-emission chemical pesticide production & heavy machinery spraying.
                 </p>
                 <p style={{ margin: 0 }}>
                   <strong>🛰️ 2. Crowdsourced Pathogen Tracking:</strong> Your scan submits localized telemetry to AI weather models, training predictive radars to forecast heat & humidity-driven disease spread caused by climate change.

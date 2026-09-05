@@ -218,55 +218,6 @@
   border: 1px solid rgba(184, 64, 64, 0.18);
 }
 
-/* ─── Google Button ──────────────────────────────── */
-.login-google-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.8rem 1.25rem;
-  border: none;
-  border-radius: var(--radius-full);
-  background: var(--surface-raised);
-  box-shadow: var(--neo-raised);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: box-shadow 0.2s ease;
-}
-
-.login-google-btn:hover {
-  box-shadow: var(--neo-raised-lg);
-}
-
-.login-google-btn:active {
-  box-shadow: var(--neo-pressed);
-}
-
-/* ─── Divider ────────────────────────────────────── */
-.login-divider {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.login-divider__line {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--moss-pale), transparent);
-}
-
-.login-divider__text {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-}
-
 /* ─── Email / Password Form ──────────────────────── */
 .login-form {
   display: flex;
@@ -344,17 +295,6 @@
 }
 
 .login-card__link:hover {
-  color: var(--moss);
-}
-
-/* ─── Skip link ──────────────────────────────────── */
-.login-skip {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  transition: color 0.2s ease;
-}
-
-.login-skip:hover {
   color: var(--moss);
 }
 

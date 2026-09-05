@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
@@ -31,34 +31,6 @@ function AnimatedPage({ children }) {
     >
       {children}
     </motion.div>
-  );
-}
-
-/* ─── Auth Callback page ─── */
-function AuthCallback() {
-  const { loginWithToken } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token  = params.get('token');
-
-    if (!token) {
-      navigate('/login?error=oauth_failed', { replace: true });
-      return;
-    }
-
-    loginWithToken(token).then((ok) => {
-      const savedPath = sessionStorage.getItem('leafsense_return_to') || '/';
-      sessionStorage.removeItem('leafsense_return_to');
-      navigate(ok ? savedPath : '/login?error=oauth_failed', { replace: true });
-    });
-  }, [loginWithToken, navigate]);
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100svh', background: 'var(--bg)' }}>
-      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Signing you in…</p>
-    </div>
   );
 }
 
@@ -126,7 +98,6 @@ export default function App() {
               </AnimatedPage>
             }
           />
-          <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </AnimatePresence>
 

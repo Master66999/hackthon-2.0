@@ -25,10 +25,11 @@ from vision_services.organic_service import get_organic_remedies
 from vision_services.outbreak_radar import calculate_outbreak_risk
 from vision_services.ai_service import generate_llm_expert_analysis, answer_agronomic_chat_question
 from vision_services.pdf_generator import generate_diagnostic_pdf
-from vision_services.carbon_service import calculate_carbon_score
+from vision_services.carbon_service import calculate_carbon_score, calculate_regenerative_farm_dashboard
 from vision_services.weather_service import fetch_7day_forecast
 from vision_services.water_service import calculate_precision_water_advisory
 from vision_services.crop_recommender import recommend_climate_resilient_crops
+from vision_services.drought_frost_radar import calculate_drought_frost_radar
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -268,8 +269,38 @@ def get_crop_recommendation():
     return jsonify(crop_data)
 
 
+@app.route("/api/vision/climate/drought-frost-radar", methods=["GET"])
+def get_drought_frost_radar():
+    """GET endpoint for AI Microclimate Drought & Frost Early Warning Radar."""
+    crop = request.args.get("crop", "Cotton")
+    location = request.args.get("location", "Pune")
+    lat = float(request.args.get("lat", 18.5204))
+    lng = float(request.args.get("lng", 73.8567))
+
+    data = calculate_drought_frost_radar(location=location, lat=lat, lng=lng, crop=crop)
+    return jsonify(data)
+
+
+@app.route("/api/vision/climate/regenerative-carbon", methods=["GET", "POST"])
+def get_regenerative_carbon():
+    """GET/POST endpoint for AI Regenerative Agriculture & Carbon Sequestration Dashboard."""
+    if request.method == "POST":
+        payload = request.get_json() or {}
+        crop = payload.get("crop", "Cotton")
+        farm_size_ha = float(payload.get("farm_size_ha", 2.5))
+        practices = payload.get("practices", ["cover_cropping", "biochar_amendment", "zero_tillage"])
+    else:
+        crop = request.args.get("crop", "Cotton")
+        farm_size_ha = float(request.args.get("farm_size_ha", 2.5))
+        practices_str = request.args.get("practices")
+        practices = practices_str.split(",") if practices_str else ["cover_cropping", "biochar_amendment", "zero_tillage"]
+
+    data = calculate_regenerative_farm_dashboard(crop=crop, farm_size_ha=farm_size_ha, active_practices=practices)
+    return jsonify(data)
+
+
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5001))
+    port = int(os.environ.get("VISION_PORT", 5001))
     is_prod = os.environ.get("RENDER") is not None or os.environ.get("NODE_ENV") == "production"
     print(f"\n[LeafSense] Plant AI Vision & Soil Intelligence Console running on port {port}")
     app.run(host="0.0.0.0", port=port, debug=not is_prod)

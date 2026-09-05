@@ -7,6 +7,9 @@ import {
   Plant, Lightning, MapPin
 } from '@phosphor-icons/react';
 import { getVisionApiUrl } from '../utils/apiConfig.js';
+import DroughtFrostRadar from '../components/DroughtFrostRadar.jsx';
+import RegenerativeCarbonDashboard from '../components/RegenerativeCarbonDashboard.jsx';
+import PrecisionWaterCalculator from '../components/PrecisionWaterCalculator.jsx';
 import './VisionConsole.css';
 
 // Preset Demo Samples
@@ -1192,6 +1195,17 @@ export default function VisionConsole() {
               ))}
             </div>
           </div>
+
+          {/* AI Precision Water & Evapotranspiration Calculator Component */}
+          <PrecisionWaterCalculator
+            initialCrop={telemetry?.crop || (selectedCrop !== 'Auto-Detect' ? selectedCrop : 'Cotton')}
+            initialSoil={telemetry?.soil?.type || 'Black Basaltic Clay'}
+          />
+
+          {/* AI Regenerative Agriculture & Carbon Sequestration Dashboard Component */}
+          <RegenerativeCarbonDashboard
+            initialCrop={telemetry?.crop || (selectedCrop !== 'Auto-Detect' ? selectedCrop : 'Cotton')}
+          />
         </div>
       )}
 
@@ -1253,11 +1267,14 @@ export default function VisionConsole() {
                 <span style={{ color: 'var(--text-muted)' }}>⚡ Anomaly Trigger:</span>
                 <strong style={{ color: 'var(--text-primary)' }}>{telemetry?.radar?.anomaly_radar?.trigger_condition || 'Elevated Relative Humidity (88%) + High Heat Spike'}</strong>
               </div>
-              <div style={{ fontSize: '0.83rem', background: 'rgba(239, 68, 68, 0.08)', padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-md)', borderLeft: '3px solid #ef4444' }}>
-                <strong>🛡️ Recommended Preventive Action:</strong> {telemetry?.radar?.anomaly_radar?.actionable_mitigation || 'Spray Potassium Bicarbonate 4g/L + Neem Oil 5ml/L preventative bio-barrier within the next 48h window.'}
               </div>
             </div>
-          </div>
+
+            {/* AI Microclimate Drought & Frost Early Warning Radar Component */}
+            <DroughtFrostRadar
+              initialLocation={telemetry?.weather?.location || locationQuery || 'Pune'}
+              initialCrop={telemetry?.crop || (selectedCrop !== 'Auto-Detect' ? selectedCrop : 'Cotton')}
+            />
         </div>
       )}
 
@@ -1339,6 +1356,8 @@ export default function VisionConsole() {
             {/* Endpoint Tabs */}
             <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
               {[
+                { path: '/api/vision/climate/regenerative-carbon', label: 'GET /api/vision/climate/regenerative-carbon' },
+                { path: '/api/vision/climate/drought-frost-radar', label: 'GET /api/vision/climate/drought-frost-radar' },
                 { path: '/api/vision/weather', label: 'GET /api/vision/weather' },
                 { path: '/api/vision/forecast', label: 'GET /api/vision/forecast' },
                 { path: '/api/vision/chat', label: 'POST /api/vision/chat' },
